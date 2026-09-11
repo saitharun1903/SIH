@@ -1,0 +1,33 @@
+databases:
+  - name: nexus-db
+    databaseName: nexus
+    user: nexus_user
+    plan: free
+
+services:
+  - type: web
+    name: nexus-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    domains:
+      - api.lunor.co.in
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexus-db
+          property: connectionString
+      - key: APP_NAME
+        value: NEXUS
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://lunor.co.in,https://www.lunor.co.in
+      - key: PYTHON_VERSION
+        value: 3.11.9
