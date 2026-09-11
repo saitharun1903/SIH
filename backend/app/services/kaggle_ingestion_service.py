@@ -35,9 +35,21 @@ ASHRAE_RAW_FILE = os.path.join(DATA_RAW_DIR, "ashrae_daily.parquet")
 PROFILING_REPORT_FILE = os.path.join(DATA_PROCESSED_DIR, "ashrae_profiling_report.json")
 
 
+import tempfile
+
 def ensure_directories():
-    os.makedirs(DATA_RAW_DIR, exist_ok=True)
-    os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+    global DATA_RAW_DIR, DATA_PROCESSED_DIR, ASHRAE_RAW_FILE, PROFILING_REPORT_FILE
+    try:
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+    except (OSError, PermissionError):
+        tmp_base = os.path.join(tempfile.gettempdir(), "nexus_data")
+        DATA_RAW_DIR = os.path.join(tmp_base, "raw")
+        DATA_PROCESSED_DIR = os.path.join(tmp_base, "processed")
+        ASHRAE_RAW_FILE = os.path.join(DATA_RAW_DIR, "ashrae_daily.parquet")
+        PROFILING_REPORT_FILE = os.path.join(DATA_PROCESSED_DIR, "ashrae_profiling_report.json")
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
 
 
 def download_ashrae_dataset() -> str:

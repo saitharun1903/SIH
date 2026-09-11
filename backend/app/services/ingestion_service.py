@@ -2,6 +2,7 @@ import os
 import uuid
 import json
 import io
+import tempfile
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Tuple, Optional
 import pandas as pd
@@ -28,8 +29,17 @@ from app.schemas.dataset import (
 )
 from app.core.logging import logger
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+_DEFAULT_UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    UPLOAD_DIR = os.path.join(tempfile.gettempdir(), "nexus_uploads")
+else:
+    UPLOAD_DIR = os.environ.get("UPLOAD_DIR", _DEFAULT_UPLOAD_DIR)
+
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except (OSError, PermissionError):
+    UPLOAD_DIR = os.path.join(tempfile.gettempdir(), "nexus_uploads")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Dataset target specifications and column synonyms
 DATASET_SPECS = {

@@ -29,9 +29,21 @@ LEAD_BENCHMARK_FILE = os.path.join(DATA_RAW_DIR, "lead_benchmark.parquet")
 BENCHMARK_EVALUATION_REPORT_FILE = os.path.join(DATA_PROCESSED_DIR, "lead_benchmark_evaluation.json")
 
 
+import tempfile
+
 def ensure_directories():
-    os.makedirs(DATA_RAW_DIR, exist_ok=True)
-    os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+    global DATA_RAW_DIR, DATA_PROCESSED_DIR, LEAD_BENCHMARK_FILE, BENCHMARK_EVALUATION_REPORT_FILE
+    try:
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+    except (OSError, PermissionError):
+        tmp_base = os.path.join(tempfile.gettempdir(), "nexus_data")
+        DATA_RAW_DIR = os.path.join(tmp_base, "raw")
+        DATA_PROCESSED_DIR = os.path.join(tmp_base, "processed")
+        LEAD_BENCHMARK_FILE = os.path.join(DATA_RAW_DIR, "lead_benchmark.parquet")
+        BENCHMARK_EVALUATION_REPORT_FILE = os.path.join(DATA_PROCESSED_DIR, "lead_benchmark_evaluation.json")
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
 
 
 def generate_lead_benchmark_dataset(seed: int = 42) -> str:

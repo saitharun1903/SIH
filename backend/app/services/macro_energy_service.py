@@ -31,9 +31,21 @@ MACRO_PROFILE_FILE = os.path.join(DATA_PROCESSED_DIR, "macro_energy_profile.json
 BASELINE_COMFORT_TEMP_C = 18.3
 
 
+import tempfile
+
 def ensure_directories():
-    os.makedirs(DATA_RAW_DIR, exist_ok=True)
-    os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+    global DATA_RAW_DIR, DATA_PROCESSED_DIR, PJM_RAW_FILE, MACRO_PROFILE_FILE
+    try:
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
+    except (OSError, PermissionError):
+        tmp_base = os.path.join(tempfile.gettempdir(), "nexus_data")
+        DATA_RAW_DIR = os.path.join(tmp_base, "raw")
+        DATA_PROCESSED_DIR = os.path.join(tmp_base, "processed")
+        PJM_RAW_FILE = os.path.join(DATA_RAW_DIR, "pjm_hourly.parquet")
+        MACRO_PROFILE_FILE = os.path.join(DATA_PROCESSED_DIR, "macro_energy_profile.json")
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        os.makedirs(DATA_PROCESSED_DIR, exist_ok=True)
 
 
 def generate_pjm_macro_dataset(seed: int = 42) -> str:
