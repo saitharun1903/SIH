@@ -251,30 +251,30 @@ export default function SimulatorPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-blue">
-              Decision Laboratory &amp; Optimization
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#004E72]">
+              Decisions
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-xs text-slate-500 font-medium">Google OR-Tools CP-SAT</span>
+            <span className="text-xs text-slate-500 font-medium">Scenario Evaluation</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-brand-navy flex items-center gap-3">
-            <Sliders className="h-6 w-6 text-brand-blue" />
-            What-If Space &amp; Energy Simulator
+          <h1 className="text-2xl font-bold tracking-tight text-[#092634] flex items-center gap-3">
+            <Sliders className="h-6 w-6 text-[#004E72]" />
+            What-If Simulator
           </h1>
           <p className="text-xs text-slate-600 mt-1">
-            Simulate institutional policy mutations, scheduled maintenance closures, and enrollment stress-tests with mathematical constraint satisfaction.
+            Test a change before applying it. Evaluate resource availability, demand shifts, and capacity changes.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
+            variant="accent"
             size="sm"
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-1.5 shadow-sm font-semibold text-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>Design Custom Scenario</span>
+            <span>Create Scenario</span>
           </Button>
         </div>
       </div>
@@ -304,18 +304,18 @@ export default function SimulatorPage() {
         </div>
       )}
 
-      {/* Step 1: 1-Click Institutional Policy Templates */}
+      {/* Suggested Scenarios */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Step 1: Curated Institutional Policy Templates (1-Click Run)
+              Suggested Scenarios
             </h2>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Instant baseline stress-tests using the authentic CP-SAT solver
+              Quick tests calibrated to your workspace resources and operating schedule
             </p>
           </div>
-          <span className="text-xs text-slate-500 font-mono">Mathematical Feasibility Guaranteed</span>
+          <span className="text-xs text-slate-500 font-mono">Constraint Solver Ready</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

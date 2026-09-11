@@ -6,9 +6,56 @@ from app.core.security import get_password_hash
 from app.core.logging import logger
 
 
-def init_initial_data() -> None:
-    """Initialize database tables and create default institutional organization and accounts if empty."""
+def migrate_schema() -> None:
+    """Safely apply non-destructive column additions to existing tables (SQLite and PostgreSQL)."""
     Base.metadata.create_all(bind=engine)
+    try:
+        url_str = str(engine.url)
+        with engine.connect() as conn:
+            migrations = [
+                ("resources", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+                ("resources", "unit", "VARCHAR(50) DEFAULT 'units'"),
+                ("resources", "group_name", "VARCHAR(100)"),
+                ("resources", "attributes_json", "TEXT DEFAULT '{}'"),
+                ("schedules", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+                ("schedules", "event_name", "VARCHAR(255)"),
+                ("schedules", "work_unit", "VARCHAR(100)"),
+                ("schedules", "required_capacity", "INTEGER"),
+                ("schedules", "attributes_json", "TEXT DEFAULT '{}'"),
+                ("resource_types", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+                ("resource_types", "attributes_schema", "TEXT DEFAULT '[]'"),
+                ("scenarios", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+                ("scenarios", "tags_json", "TEXT DEFAULT '[]'"),
+                ("recommendations", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+                ("recommendations", "confidence_score", "FLOAT DEFAULT 0.85"),
+                ("actions", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+                ("audit_logs", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
+            ]
+            if "sqlite" in url_str:
+                cursor = conn.connection.cursor()
+                for table, col, col_type in migrations:
+                    try:
+                        existing_cols = [c[1] for c in cursor.execute(f"PRAGMA table_info({table})").fetchall()]
+                        if existing_cols and col not in existing_cols:
+                            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
+                    except Exception:
+                        pass
+                conn.connection.commit()
+            elif "postgres" in url_str:
+                from sqlalchemy import text
+                for table, col, col_type in migrations:
+                    try:
+                        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type};"))
+                    except Exception:
+                        pass
+                conn.commit()
+    except Exception as e:
+        logger.warning(f"Database schema auto-sync notice: {e}")
+
+
+def init_initial_data() -> None:
+    """Initialize database tables, apply schema updates, and create baseline entities if empty."""
+    migrate_schema()
     db: Session = SessionLocal()
     try:
         # Check or create default Organization

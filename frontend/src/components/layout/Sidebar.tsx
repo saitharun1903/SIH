@@ -44,51 +44,55 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: "Overview",
+    title: "Workspace",
     items: [
-      { name: "Executive Home", href: "/dashboard", icon: LayoutDashboard, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Workspaces & Goals", href: "/workspace", icon: Target, roles: ["Administrator", "Analyst", "Viewer"], badge: "Multi-Domain" },
+      { name: "Overview", href: "/dashboard", icon: LayoutDashboard, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Workspaces & Goals", href: "/workspace", icon: Target, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
   {
-    title: "Operations",
+    title: "Resources",
     items: [
-      { name: "Resources", href: "/resources", icon: Layers, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Facilities & Zones", href: "/buildings", icon: Building2, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "All Resources", href: "/resources", icon: Layers, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Facilities & Groups", href: "/buildings", icon: Building2, roles: ["Administrator", "Analyst", "Viewer"] },
       { name: "Schedules", href: "/schedules", icon: CalendarDays, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
   {
-    title: "Data Intelligence",
-
+    title: "Data",
     items: [
       { name: "Data Sources", href: "/data-sources", icon: Database, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Data Ingestion", href: "/imports", icon: UploadCloud, roles: ["Administrator"] },
+      { name: "Import Data", href: "/imports", icon: UploadCloud, roles: ["Administrator"] },
       { name: "Data Quality", href: "/data-quality", icon: CheckCircle2, roles: ["Administrator", "Analyst"] },
     ],
   },
   {
-    title: "Intelligence & Forecasting",
+    title: "Insights",
     items: [
       { name: "Analytics", href: "/analytics", icon: BarChart3, roles: ["Administrator", "Analyst", "Viewer"] },
       { name: "Anomalies", href: "/anomalies", icon: AlertTriangle, roles: ["Administrator", "Analyst"] },
-      { name: "Demand Forecasts", href: "/predictions", icon: TrendingUp, roles: ["Administrator", "Analyst"] },
+      { name: "Forecasts", href: "/predictions", icon: TrendingUp, roles: ["Administrator", "Analyst"] },
     ],
   },
   {
-    title: "Decisions & Optimization",
+    title: "Decisions",
     items: [
-      { name: "What-If Simulator", href: "/simulator", icon: SlidersHorizontal, roles: ["Administrator", "Analyst"], badge: "CP-SAT" },
-      { name: "Scenario Compare", href: "/scenarios", icon: GitCompare, roles: ["Administrator", "Analyst"] },
+      { name: "What-If Simulator", href: "/simulator", icon: SlidersHorizontal, roles: ["Administrator", "Analyst"] },
+      { name: "Scenarios", href: "/scenarios", icon: GitCompare, roles: ["Administrator", "Analyst"] },
+    ],
+  },
+  {
+    title: "Actions",
+    items: [
       { name: "Action Center", href: "/actions", icon: Zap, roles: ["Administrator", "Analyst"] },
+      { name: "Activity Log", href: "/audit", icon: History, roles: ["Administrator"] },
     ],
   },
   {
-    title: "System & Governance",
+    title: "Reports & Help",
     items: [
-      { name: "Executive Reports", href: "/reports", icon: FileText, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "AI Assistant", href: "/assistant", icon: Bot, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Audit Log", href: "/audit", icon: History, roles: ["Administrator"] },
+      { name: "Reports", href: "/reports", icon: FileText, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "NEXUS Assistant", href: "/assistant", icon: Bot, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
 ];
@@ -185,13 +189,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         {/* Footer Identifier */}
         <div className="p-3 border-t border-[#18455C] bg-[#071F2B] text-[10px] text-[#64748B] flex flex-col space-y-0.5">
           <div className="flex justify-between items-center text-[#94A3B8]">
-            <span className="font-semibold">SIH26202 Platform</span>
+            <span className="font-semibold">NEXUS Platform</span>
             <span className="font-mono text-[9px] text-[#004E72] font-bold bg-[#EBF3F7] px-1 py-0.2 rounded">
               v1.0.0
             </span>
           </div>
           <p className="text-[10px] text-[#64748B] leading-tight">
-            Institutional Decision Engine
+            Resource Intelligence & Decisions
           </p>
         </div>
       </aside>

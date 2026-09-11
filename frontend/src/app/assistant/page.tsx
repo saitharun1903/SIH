@@ -41,12 +41,12 @@ export default function AssistantPage() {
     {
       id: "welcome",
       sender: "assistant",
-      text: "Hello! I am **NEXUS AI Intelligence**, your institutional facility decision assistant. I have direct analytical access to campus telemetry, anomaly detection models, and the OR-Tools CP-SAT optimization engine. How can I help optimize campus spaces and power consumption today?",
+      text: "Hello! I am **NEXUS Assistant**, your resource intelligence guide. I can answer questions about your resources, current usage, active anomalies, and test what-if scenarios based on live data. How can I help you today?",
       category: "welcome",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       suggestedActions: [
-        { label: "Analyze Phantom Energy", href: "/anomalies" },
-        { label: "Open What-If Simulator", href: "/simulator" },
+        { label: "View Anomalies", href: "/anomalies" },
+        { label: "What-If Simulator", href: "/simulator" },
       ],
     },
   ]);
@@ -70,10 +70,10 @@ export default function AssistantPage() {
       setSuggestedPrompts(prompts);
     } catch {
       setSuggestedPrompts([
-        "What spaces currently suffer from phantom energy waste?",
-        "Which lecture halls are underutilized below 40%?",
-        "What are the projected savings if we move Friday classes online?",
-        "Show me the most overloaded rooms across campus.",
+        "What needs attention right now?",
+        "Which resources are currently underutilized?",
+        "What changed in resource usage this week?",
+        "What happens if we take a resource offline for maintenance?",
       ]);
     }
   }
@@ -99,7 +99,7 @@ export default function AssistantPage() {
       const assistantMsg: ChatMessage = {
         id: `a-${Date.now()}`,
         sender: "assistant",
-        text: resp.answer,
+        text: resp.answer || "",
         category: resp.category,
         metrics: resp.metrics,
         dataTable: resp.data_table,
@@ -108,13 +108,15 @@ export default function AssistantPage() {
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      const errorMsg: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: "assistant",
-        text: `Sorry, I encountered an issue analyzing the database: ${err.message || "Unknown error"}.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          sender: "assistant",
+          text: "I encountered an issue querying the database. Please verify your connection or try again.",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -125,32 +127,31 @@ export default function AssistantPage() {
       {
         id: "welcome-reset",
         sender: "assistant",
-        text: "Chat cleared. What institutional space, energy, or timetable question can I answer for you?",
-        category: "welcome",
+        text: "Conversation cleared. How can I help you analyze your resources today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8.5rem)] space-y-4 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-200 flex-shrink-0">
+    <div className="flex flex-col h-[calc(100vh-8.5rem)] max-w-5xl mx-auto space-y-4">
+      {/* Top Header Card */}
+      <div className="flex items-center justify-between pb-3 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-50 text-brand-blue border border-blue-100 shadow-xs">
+          <div className="p-2.5 rounded-xl bg-blue-50 text-[#004E72] border border-blue-100 shadow-xs">
             <Bot className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-              <h1 className="text-xl font-bold text-brand-navy">
-                NEXUS Decision Assistant
+              <h1 className="text-xl font-bold text-[#092634]">
+                NEXUS Assistant
               </h1>
               <Badge variant="blue" size="sm">
-                GROUNDED ANALYTICAL ENGINE
+                Resource Guide
               </Badge>
             </div>
             <p className="text-xs text-slate-500">
-              Zero synthetic AI hallucination • 100% database-backed inference &amp; CP-SAT solver citations
+              Ask questions about resources, usage trends, anomalies, and what-if decisions grounded in live database data.
             </p>
           </div>
         </div>

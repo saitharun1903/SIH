@@ -105,10 +105,10 @@ export default function ReportsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#092634] flex items-center gap-2.5">
             <FileText className="w-6 h-6 text-[#004E72]" />
-            Institutional Audit Dossier
+            Reports
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Formal audit-grade summary for campus administration, NAAC/NIRF accreditation, and sustainability reporting
+            Executive and operational reports covering resource utilization, energy consumption, and health metrics.
           </p>
         </div>
 

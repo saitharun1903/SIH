@@ -320,14 +320,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                 }`}
               />
               <span className="text-[#092634] text-xs font-medium hidden md:inline">
-                {healthStatus === "healthy" ? "Engine Healthy" : healthStatus === "checking" ? "Checking" : "Degraded"}
+                {healthStatus === "healthy" ? "Connected" : healthStatus === "checking" ? "Checking" : "Offline"}
               </span>
             </button>
 
             {showHealthMenu && (
               <div className="absolute right-0 mt-1.5 w-64 bg-white rounded-lg border border-[#E2E8F0] shadow-dropdown p-3 z-50 text-xs">
                 <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
-                  <span className="font-semibold text-[#092634]">Decision Engine Telemetry</span>
+                  <span className="font-semibold text-[#092634]">System Status</span>
                   <Badge variant={healthStatus === "healthy" ? "success" : "warning"} size="sm">
                     {healthStatus.toUpperCase()}
                   </Badge>
@@ -340,15 +340,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                   <div className="flex justify-between">
                     <span className="text-[#64748B]">Database:</span>
                     <span className="font-medium text-emerald-700">
-                      {healthDetails?.database?.dialect || "PostgreSQL"} (Live)
+                      {healthDetails?.database?.dialect || "Database"} (Live)
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">CP-SAT Solver:</span>
-                    <span className="font-medium text-[#004E72]">OR-Tools 9.8</span>
+                    <span className="text-[#64748B]">Constraint Solver:</span>
+                    <span className="font-medium text-[#004E72]">OR-Tools CP-SAT</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Anomaly Engine:</span>
+                    <span className="text-[#64748B]">Anomaly Detector:</span>
                     <span className="font-medium text-emerald-700">Isolation Forest</span>
                   </div>
                 </div>
@@ -410,7 +410,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                           </span>
                         </div>
                         <span className="text-[10px] text-[#64748B] mt-1 block">
-                          Active telemetry breach • {alt.time}
+                          Active anomaly • {alt.time}
                         </span>
                       </Link>
                     ))
@@ -423,7 +423,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                     onClick={() => setShowNotifications(false)}
                     className="text-[11px] font-semibold text-[#004E72] hover:underline"
                   >
-                    View Anomaly Monitor &rarr;
+                    View All Anomalies &rarr;
                   </Link>
                 </div>
               </div>
@@ -444,8 +444,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
             {showHelpMenu && (
               <div className="absolute right-0 mt-1.5 w-72 bg-white rounded-lg border border-[#E2E8F0] shadow-dropdown py-2 z-50 text-xs animate-fade-in">
                 <div className="px-3.5 py-1.5 border-b border-[#F1F5F9]">
-                  <p className="font-bold text-[#092634]">NEXUS Intelligence Platform</p>
-                  <p className="text-[#64748B] text-[11px]">SIH26202 Decision Support Engine</p>
+                  <p className="font-bold text-[#092634]">NEXUS Platform</p>
+                  <p className="text-[#64748B] text-[11px]">Resource Intelligence &amp; Decisions</p>
                 </div>
                 <div className="py-1">
                   <Link
@@ -455,8 +455,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                   >
                     <FileText className="h-4 w-4 mr-2 text-[#004E72]" />
                     <div>
-                      <p className="font-medium">Analytical Reports</p>
-                      <p className="text-[10px] text-[#64748B]">Audits, space utilization, and energy</p>
+                      <p className="font-medium">Reports</p>
+                      <p className="text-[10px] text-[#64748B]">Resource utilization and health reports</p>
                     </div>
                   </Link>
                   <Link
@@ -466,8 +466,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                   >
                     <Zap className="h-4 w-4 mr-2 text-[#FF6E42]" />
                     <div>
-                      <p className="font-medium">CP-SAT Simulation Guide</p>
-                      <p className="text-[10px] text-[#64748B]">Mathematical schedule optimization</p>
+                      <p className="font-medium">What-If Simulator Guide</p>
+                      <p className="text-[10px] text-[#64748B]">Test operational changes before applying</p>
                     </div>
                   </Link>
                   <Link
@@ -477,8 +477,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarCollap
                   >
                     <Shield className="h-4 w-4 mr-2 text-emerald-600" />
                     <div>
-                      <p className="font-medium">AI Decision Copilot</p>
-                      <p className="text-[10px] text-[#64748B]">Ask natural language operational questions</p>
+                      <p className="font-medium">NEXUS Assistant</p>
+                      <p className="text-[10px] text-[#64748B]">Ask questions about your resources</p>
                     </div>
                   </Link>
                 </div>

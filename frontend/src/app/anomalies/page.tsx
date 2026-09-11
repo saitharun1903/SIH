@@ -192,18 +192,18 @@ export default function AnomaliesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-blue">
-              Risk Intelligence
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#004E72]">
+              Insights
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-xs text-slate-500 font-medium">Unsupervised Isolation Forest &amp; Rules</span>
+            <span className="text-xs text-slate-500 font-medium">Issue Detection</span>
           </div>
-          <h1 className="text-2xl font-bold text-brand-navy tracking-tight flex items-center gap-2.5">
-            <ShieldAlert className="h-6 w-6 text-rose-600" />
-            Anomaly Center &amp; Risk Intelligence
+          <h1 className="text-2xl font-bold text-[#092634] tracking-tight flex items-center gap-2.5">
+            <AlertTriangle className="h-6 w-6 text-[#FF6E42]" />
+            Anomalies
           </h1>
           <p className="text-xs text-slate-600 mt-1">
-            Unsupervised Isolation Forest ML &amp; physical boundary detector tracking energy waste, off-hours breaches, and safety overload.
+            Items and conditions requiring attention across your resources.
           </p>
         </div>
 
@@ -595,8 +595,14 @@ export default function AnomaliesPage() {
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-slate-500 font-sans">
                     <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
-                    <div className="font-bold text-brand-navy">Zero Anomalies in Selected Filter</div>
-                    <div className="text-xs text-slate-400 mt-1">All monitored spaces operating within calibrated baseline.</div>
+                    <div className="font-bold text-[#092634]">
+                      {totalCount === 0 && !summary?.active_count ? "No Anomaly Results Yet" : "Zero Active Anomalies"}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                      {totalCount === 0 && !summary?.active_count
+                        ? "No anomaly detection results yet because monitoring telemetry has not been imported or evaluated."
+                        : "All monitored resources in this filter are operating within calibrated baseline limits."}
+                    </div>
                   </td>
                 </tr>
               ) : (

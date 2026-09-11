@@ -202,11 +202,28 @@ export default function DashboardPage() {
     }
 
     return {
-      title: `Campus infrastructure operating within baseline parameters`,
-      description: `Overall utilization is at ${util}%. All monitored spaces are operating within calibrated thermal and occupancy envelopes.`,
+      title: `Resource operations running within baseline parameters`,
+      description: `Overall utilization is at ${util}%. All monitored ${terminology.resourcePlural.toLowerCase()} are operating within expected capacity and operational limits.`,
       level: "success",
     };
-  }, [summary, anomalySummary]);
+  }, [summary, anomalySummary, terminology]);
+
+  // Determine user lifecycle state (Part F):
+  // State 1: New organization / no workspace configured
+  // State 2: Workspace configured, but no resources
+  // State 3: Resources exist, but insufficient telemetry/usage
+  // State 4: Operational data exists
+  const dashboardState = useMemo(() => {
+    if (!currentWorkspace) return 1;
+    const hasResources = (summary?.total_spaces_analyzed ?? 0) > 0 || buildings.length > 0;
+    if (!hasResources) return 2;
+    const hasTelemetry =
+      (utilizationTrends && utilizationTrends.length > 0) ||
+      (energyTrends && energyTrends.length > 0) ||
+      (summary && summary.overall_utilization_percent > 0);
+    if (!hasTelemetry) return 3;
+    return 4;
+  }, [currentWorkspace, summary, buildings, utilizationTrends, energyTrends]);
 
   return (
     <div className="space-y-6">
@@ -300,8 +317,112 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2. Key Performance Area (4 Restrained High-Value Metrics) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* State 1: New organization / no workspace configured */}
+      {dashboardState === 1 && (
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 max-w-4xl mx-auto shadow-subtle text-center my-6">
+          <div className="h-12 w-12 rounded-xl bg-[#004E72] text-white flex items-center justify-center font-bold text-xl mx-auto shadow-sm mb-4">
+            N
+          </div>
+          <h2 className="text-2xl font-bold text-[#092634] tracking-tight">
+            Welcome to NEXUS
+          </h2>
+          <p className="text-sm text-[#475569] mt-1.5 max-w-xl mx-auto">
+            Manage resources, understand what is happening, and test better decisions.
+          </p>
+
+          <div className="mt-8 text-left">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#004E72] mb-3">
+              Get Started
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="h-6 w-6 rounded-full bg-[#004E72] text-white text-xs font-bold flex items-center justify-center mb-2">1</span>
+                <h4 className="text-sm font-semibold text-[#092634]">Set up workspace</h4>
+                <p className="text-xs text-[#64748B] mt-1">Configure your domain template and operational parameters.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="h-6 w-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center mb-2">2</span>
+                <h4 className="text-sm font-semibold text-[#092634]">Add resources</h4>
+                <p className="text-xs text-[#64748B] mt-1">Define equipment, facilities, rooms, or vehicles.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="h-6 w-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center mb-2">3</span>
+                <h4 className="text-sm font-semibold text-[#092634]">Import data</h4>
+                <p className="text-xs text-[#64748B] mt-1">Upload operational schedules, power meters, or sensor logs.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="h-6 w-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center mb-2">4</span>
+                <h4 className="text-sm font-semibold text-[#092634]">Set a goal</h4>
+                <p className="text-xs text-[#64748B] mt-1">Track target utilization, cost savings, or uptime goals.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
+              <div className="flex gap-3">
+                <Link href="/workspace">
+                  <Button variant="primary" size="sm">Set up workspace</Button>
+                </Link>
+                <Link href="/imports">
+                  <Button variant="outline" size="sm">Import data</Button>
+                </Link>
+              </div>
+              <span className="text-xs text-[#64748B]">Zero synthetic claims • Grounded telemetry</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* State 2: Workspace configured, but no resources */}
+      {dashboardState === 2 && (
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 max-w-2xl mx-auto shadow-subtle text-center my-6">
+          <div className="h-12 w-12 rounded-xl bg-blue-50 text-[#004E72] flex items-center justify-center mx-auto mb-4">
+            <Building2 className="h-6 w-6" />
+          </div>
+          <h2 className="text-xl font-bold text-[#092634]">Your workspace is ready</h2>
+          <p className="text-sm text-[#475569] mt-2">
+            Add resources or import data to start getting insights.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link href="/resources">
+              <Button variant="primary" size="sm">Add resources</Button>
+            </Link>
+            <Link href="/imports">
+              <Button variant="outline" size="sm">Import data</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* State 3: Resources exist, but insufficient telemetry/schedules */}
+      {dashboardState === 3 && (
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-subtle my-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#004E72]">Resources Configured</span>
+              <h2 className="text-lg font-bold text-[#092634] mt-0.5">
+                {summary?.total_spaces_analyzed || buildings.length} {terminology.resourcePlural.toLowerCase()} registered
+              </h2>
+              <p className="text-xs text-[#475569] mt-1 max-w-2xl">
+                Operational telemetry, schedules, or usage logs are needed to compute live utilization trends and detect anomalies.
+              </p>
+            </div>
+            <div className="flex gap-2.5 shrink-0">
+              <Link href="/imports">
+                <Button variant="primary" size="sm">Import telemetry</Button>
+              </Link>
+              <Link href="/schedules">
+                <Button variant="outline" size="sm">Manage schedules</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* State 4: Operational Data Exists -> Full Live Overview */}
+      {dashboardState === 4 && (
+        <>
+          {/* 2. Key Performance Area (4 Restrained High-Value Metrics) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1: Resource Efficiency */}
         <Card className="hover:border-[#CBD5E1] transition-colors">
           <div className="flex items-start justify-between">
@@ -765,16 +886,18 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center">
-              <Zap className="h-7 w-7 text-[#004E72] mx-auto mb-2 opacity-60" />
-              <p className="text-xs font-semibold text-[#092634]">No pending recommendations</p>
-              <p className="text-[11px] text-[#64748B] mt-0.5">
-                Current timetable and HVAC allocations are operating at maximum calculated efficiency.
-              </p>
-            </div>
-          )}
-        </Card>
-      </div>
+              <div className="py-8 text-center">
+                <Zap className="h-7 w-7 text-[#004E72] mx-auto mb-2 opacity-60" />
+                <p className="text-xs font-semibold text-[#092634]">No pending recommendations</p>
+                <p className="text-[11px] text-[#64748B] mt-0.5">
+                  Current allocations and monitored resources are operating within expected targets.
+                </p>
+              </div>
+            )}
+          </Card>
+        </div>
+        </>
+      )}
     </div>
   );
 }

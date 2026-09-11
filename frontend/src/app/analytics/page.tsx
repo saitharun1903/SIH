@@ -95,12 +95,12 @@ export default function AnalyticsPage() {
         multiSourceResp,
       ] = await Promise.all([
         api.getBuildingsList().catch(() => []),
-        api.getAnalyticsSummary({ building_id: bId }),
-        api.getUtilizationTrends({ building_id: bId }),
-        api.getEnergyTrends({ building_id: bId }),
-        api.getResourceRankings({ building_id: bId, limit: 100 }),
-        api.getBuildingComparison(),
-        api.getPeakDemand(),
+        api.getAnalyticsSummary({ building_id: bId }).catch(() => null),
+        api.getUtilizationTrends({ building_id: bId }).catch(() => []),
+        api.getEnergyTrends({ building_id: bId }).catch(() => []),
+        api.getResourceRankings({ building_id: bId, limit: 100 }).catch(() => []),
+        api.getBuildingComparison().catch(() => []),
+        api.getPeakDemand().catch(() => []),
         api.getMultiSourceIntelligence(cssiThreshold).catch(() => null),
       ]);
 
@@ -191,18 +191,18 @@ export default function AnalyticsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-brand-blue">
-                Analytics &amp; Resource Telemetry
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#004E72]">
+                Analytics
               </span>
               <span className="text-slate-300">•</span>
-              <span className="text-xs text-slate-500 font-medium">Deterministic Database Aggregation</span>
+              <span className="text-xs text-slate-500 font-medium">Resource usage and performance</span>
             </div>
-            <h1 className="text-2xl font-bold text-brand-navy tracking-tight flex items-center gap-2.5">
-              <BarChart3 className="h-6 w-6 text-brand-blue" />
-              Resource Analytics &amp; Efficiency Intelligence
+            <h1 className="text-2xl font-bold text-[#092634] tracking-tight flex items-center gap-2.5">
+              <BarChart3 className="h-6 w-6 text-[#004E72]" />
+              Analytics
             </h1>
             <p className="text-sm text-slate-600 mt-1">
-              Deterministic database aggregation computing institutional space utilization, billed power consumption, and thermal efficiency.
+              Understand how your resources are being used and identify opportunities for optimization.
             </p>
           </div>
 
@@ -252,35 +252,25 @@ export default function AnalyticsPage() {
               onClick={() => setActiveView("campus")}
               className={`flex items-center gap-2 px-4 py-2 text-xs rounded-lg font-semibold transition-all ${
                 activeView === "campus"
-                  ? "bg-white text-brand-navy shadow-sm border border-slate-200 font-bold"
-                  : "text-slate-600 hover:text-brand-navy hover:bg-white/50"
+                  ? "bg-white text-[#092634] shadow-sm border border-slate-200 font-bold"
+                  : "text-slate-600 hover:text-[#092634] hover:bg-white/50"
               }`}
             >
-              <BarChart3 className={`h-4 w-4 ${activeView === "campus" ? "text-brand-blue" : "text-slate-400"}`} />
-              <span>Campus Operational KPIs</span>
+              <BarChart3 className={`h-4 w-4 ${activeView === "campus" ? "text-[#004E72]" : "text-slate-400"}`} />
+              <span>Resource Usage</span>
             </button>
 
             <button
               onClick={() => setActiveView("multi_source")}
               className={`flex items-center gap-2 px-4 py-2 text-xs rounded-lg font-semibold transition-all ${
                 activeView === "multi_source"
-                  ? "bg-brand-navy text-white shadow-sm font-bold"
-                  : "text-slate-600 hover:text-brand-navy hover:bg-white/50"
+                  ? "bg-[#092634] text-white shadow-sm font-bold"
+                  : "text-slate-600 hover:text-[#092634] hover:bg-white/50"
               }`}
             >
-              <Activity className={`h-4 w-4 ${activeView === "multi_source" ? "text-brand-orange" : "text-slate-400"}`} />
-              <span>Multi-Source Hybrid Intelligence</span>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
-                activeView === "multi_source" ? "bg-white/10 text-white" : "bg-slate-200 text-slate-700"
-              }`}>
-                SIH26202
-              </span>
+              <Activity className={`h-4 w-4 ${activeView === "multi_source" ? "text-[#FF6E42]" : "text-slate-400"}`} />
+              <span>Cross-Source Analysis</span>
             </button>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span>Real-Data Grounded: Zero Synthetic Arrays</span>
           </div>
         </div>
 
@@ -312,50 +302,73 @@ export default function AnalyticsPage() {
                 </div>
               </Card>
 
-              {/* Energy & Cost Card */}
-              <Card className="p-5 border-slate-200 bg-white shadow-subtle hover:border-slate-300 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Energy Consumption
-                  </span>
-                  <div className="h-8 w-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
-                    <Zap className="h-4 w-4" />
+              {/* Energy or Scheduled Capacity Card */}
+              {summary && summary.total_energy_kwh > 0 ? (
+                <Card className="p-5 border-slate-200 bg-white shadow-subtle hover:border-slate-300 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Energy Consumption
+                    </span>
+                    <div className="h-8 w-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                      <Zap className="h-4 w-4" />
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold font-mono text-brand-navy">
-                    {summary ? `${summary.total_energy_kwh.toLocaleString()}` : "--"}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-500">kWh</span>
-                </div>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span>Billed Cost:</span>
-                  <strong className="text-brand-navy font-mono font-bold">
-                    ₹{summary ? summary.total_energy_cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "--"}
-                  </strong>
-                </div>
-              </Card>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold font-mono text-[#092634]">
+                      {summary.total_energy_kwh.toLocaleString()}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500">kWh</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>Billed Cost:</span>
+                    <strong className="text-[#092634] font-mono font-bold">
+                      ₹{summary.total_energy_cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </strong>
+                  </div>
+                </Card>
+              ) : (
+                <Card className="p-5 border-slate-200 bg-white shadow-subtle hover:border-slate-300 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Allocated Hours
+                    </span>
+                    <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-[#004E72]">
+                      <Clock className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold font-mono text-[#092634]">
+                      {summary?.total_scheduled_hours ? summary.total_scheduled_hours.toLocaleString() : "--"}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500">hours</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>Energy Status:</span>
+                    <span className="text-slate-500 text-xs">Telemetry not configured</span>
+                  </div>
+                </Card>
+              )}
 
-              {/* Efficiency Intensity */}
+              {/* Total Capacity Card */}
               <Card className="p-5 border-slate-200 bg-white shadow-subtle hover:border-slate-300 transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Operational Efficiency
+                    Total Capacity
                   </span>
                   <div className="h-8 w-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                    <Flame className="h-4 w-4" />
+                    <Layers className="h-4 w-4" />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold font-mono text-brand-navy">
-                    {summary ? `${summary.energy_per_occupied_hour}` : "--"}
+                  <span className="text-3xl font-bold font-mono text-[#092634]">
+                    {summary?.total_capacity_seats ? summary.total_capacity_seats.toLocaleString() : "--"}
                   </span>
-                  <span className="text-xs text-slate-500">kWh / room-hr</span>
+                  <span className="text-xs text-slate-500">total units</span>
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span>Student Load:</span>
-                  <strong className="text-brand-navy font-mono font-bold">
-                    {summary ? `${summary.energy_per_student} kWh` : "--"} / student
+                  <span>Monitored Resources:</span>
+                  <strong className="text-[#092634] font-mono font-bold">
+                    {summary?.total_spaces_analyzed ?? 0}
                   </strong>
                 </div>
               </Card>
@@ -364,7 +377,7 @@ export default function AnalyticsPage() {
               <Card className="p-5 border-slate-200 bg-white shadow-subtle hover:border-slate-300 transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Space Health Balance
+                    Status Breakdown
                   </span>
                   <div className="h-8 w-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
                     <Layers className="h-4 w-4" />
@@ -672,9 +685,9 @@ export default function AnalyticsPage() {
             <Card className="border-slate-200 bg-white shadow-subtle overflow-hidden">
               <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-bold text-brand-navy">Space Utilization &amp; Thermal Ranking</h2>
+                  <h2 className="text-base font-bold text-[#092634]">Resource Utilization Rankings</h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Institutional rooms ranked by average utilization and power consumption
+                    Resources ranked by measured utilization and operational status
                   </p>
                 </div>
 
@@ -860,16 +873,16 @@ export default function AnalyticsPage() {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="blue">SYNCHRONIZED 24-HOUR FUSION</Badge>
+                    <Badge variant="blue">Cross-Source Correlation</Badge>
                     <span className="text-xs font-mono text-slate-500">
-                      Source: SQLite (Schedules, Meters) + Kaggle (PJM Hourly Energy)
+                      Telemetry + Scheduling + Grid Data
                     </span>
                   </div>
-                  <h2 className="text-base font-bold text-brand-navy tracking-tight">
-                    Diurnal Multi-Layer Demand, Weather &amp; Grid Stress Overlay
+                  <h2 className="text-base font-bold text-[#092634] tracking-tight">
+                    Demand, Operations &amp; Power Overlay
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Simultaneous temporal projection of campus class density, meter power draw, regional grid MW, outdoor temperature, and Cross-Source Stress Index (CSSI).
+                    Combined view showing operational demand, meter power draw, grid load, and correlation indicators across the 24-hour cycle.
                   </p>
                 </div>
 
@@ -1055,16 +1068,16 @@ export default function AnalyticsPage() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="warning">CO-OPTIMIZATION DISPATCH</Badge>
+                    <Badge variant="warning">Optimization Candidates</Badge>
                     <span className="text-xs font-mono text-slate-500">
-                      Detected: {multiSourceData?.timetable_stress_collisions.length || 0} Critical Slots
+                      Identified: {multiSourceData?.timetable_stress_collisions.length || 0} peak conflicts
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-brand-navy">
-                    High-Stress Timetable Collisions &amp; Load-Shifting Candidates
+                  <h3 className="text-base font-bold text-[#092634]">
+                    Peak Load &amp; Capacity Bottlenecks
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Identifies class sessions operating in peak grid tariff hours, top floors with severe solar thermal heat, or severe capacity underutilization.
+                    Operational allocations during peak grid rates, high thermal load hours, or significant capacity mismatches.
                   </p>
                 </div>
 

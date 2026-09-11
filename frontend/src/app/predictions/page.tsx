@@ -171,27 +171,22 @@ export default function PredictionsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-blue">
-              Predictive Intelligence
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#004E72]">
+              Insights
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-xs text-slate-500 font-medium">Quantile Gradient Boosted Trees</span>
+            <span className="text-xs text-slate-500 font-medium">Demand Forecasts</span>
           </div>
-          <h1 className="text-2xl font-bold text-brand-navy tracking-tight flex items-center gap-2.5">
-            <Brain className="h-6 w-6 text-brand-blue" />
-            Demand &amp; Utilization Forecasting Engine
+          <h1 className="text-2xl font-bold text-[#092634] tracking-tight flex items-center gap-2.5">
+            <TrendingUp className="h-6 w-6 text-[#004E72]" />
+            Forecasts
           </h1>
           <p className="text-xs text-slate-600 mt-1">
-            Quantile Gradient Boosted Trees (P10, P50, P90) projecting future spatial demand, timetable stress, and electrical energy loads.
+            See expected future demand and projected resource usage.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-brand-blue text-xs font-mono">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span>Telemetry: 14-Day Ground-Truth</span>
-          </div>
-
           <Button
             variant={showMacroPanel ? "primary" : "outline"}
             size="sm"
@@ -280,23 +275,27 @@ export default function PredictionsPage() {
           </div>
         </Card>
 
-        {/* Forecast Accuracy / MAPE */}
+        {/* Forecast Accuracy / Evaluation */}
         <Card className="p-5 border-slate-200 bg-white shadow-subtle">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Model Accuracy (1 - MAPE)
+              Evaluation Baseline
             </span>
             <div className="h-8 w-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold font-mono text-emerald-700">
-              {forecastData ? `${(100 - forecastData.metrics.mape).toFixed(1)}%` : "--"}
+            <span className="text-2xl font-bold font-mono text-emerald-700">
+              {forecastData && forecastData.historical.length >= 10
+                ? `${(100 - forecastData.metrics.mape).toFixed(1)}%`
+                : "Awaiting Data"}
             </span>
           </div>
           <div className="mt-2 text-xs text-emerald-800 font-medium">
-            Tested on {forecastData?.historical.length || 0} telemetry intervals
+            {forecastData && forecastData.historical.length >= 10
+              ? `Evaluated on ${forecastData.historical.length} telemetry points`
+              : "Insufficient observations for score"}
           </div>
         </Card>
 
