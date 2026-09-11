@@ -3,7 +3,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useWorkspace } from "@/context/WorkspaceContext";
+import { GettingStartedCard } from "@/components/common/GettingStartedCard";
 import { Card } from "@/components/ui/Card";
+
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
@@ -47,6 +50,7 @@ import {
 
 export default function DashboardPage() {
   const { user, hasRole } = useAuth();
+  const { currentWorkspace, terminology } = useWorkspace();
   const isAdmin = hasRole(["Administrator"]);
 
   // State
@@ -60,6 +64,7 @@ export default function DashboardPage() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("7d");
+
 
   // Real Database Data
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
@@ -205,28 +210,38 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* 0. Getting Started Lifecycle Tracker */}
+      <GettingStartedCard />
+
       {/* 1. Page Header: Title, Description & Operational Filters */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#092634]">
-            Resource Overview
-          </h1>
+          <div className="flex items-center space-x-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#092634]">
+              {currentWorkspace ? currentWorkspace.name : "Resource Intelligence"}
+            </h1>
+            {currentWorkspace?.code && (
+              <span className="px-2 py-0.5 rounded bg-[#F1F5F9] border border-[#CBD5E1] text-xs font-mono font-semibold text-[#092634]">
+                {currentWorkspace.code}
+              </span>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
-            Understand utilization, identify inefficiencies, and act on the highest-impact opportunities.
+            Monitor {terminology.resourcePlural.toLowerCase()}, identify operational bottlenecks, and act on verified ROI opportunities.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Building Filter */}
+          {/* Facility / Group Filter */}
           <div className="flex items-center space-x-1.5 bg-white border border-[#E2E8F0] rounded-md px-2.5 py-1 text-xs shadow-subtle">
             <Building2 className="h-3.5 w-3.5 text-[#64748B]" />
             <select
               value={selectedBuilding}
               onChange={(e) => setSelectedBuilding(e.target.value)}
               className="bg-transparent border-none text-[#092634] font-medium focus:ring-0 cursor-pointer pr-4 text-xs"
-              aria-label="Filter by Building"
+              aria-label={`Filter by ${terminology.group}`}
             >
-              <option value="all">All Buildings ({Array.isArray(buildings) ? buildings.length : 0})</option>
+              <option value="all">All {terminology.group}s ({Array.isArray(buildings) ? buildings.length : 0})</option>
               {Array.isArray(buildings) &&
                 buildings.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -237,6 +252,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Time Range */}
+
           <div className="flex items-center space-x-1.5 bg-white border border-[#E2E8F0] rounded-md px-2.5 py-1 text-xs shadow-subtle">
             <Calendar className="h-3.5 w-3.5 text-[#64748B]" />
             <select

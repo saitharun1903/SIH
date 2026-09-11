@@ -31,6 +31,7 @@ class Organization(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
+    workspaces: Mapped[List["Workspace"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
     users: Mapped[List["User"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
     buildings: Mapped[List["Building"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
     resource_types: Mapped[List["ResourceType"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
@@ -52,6 +53,74 @@ class User(Base):
 
     # Relationships
     organization: Mapped["Organization"] = relationship(back_populates="users")
+
+
+class Workspace(Base):
+    __tablename__ = "workspaces"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
+    workspace_type: Mapped[str] = mapped_column(String(100), default="custom")  # factory, hospital, warehouse, office, education, custom
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    location: Mapped[str] = mapped_column(String(255), default="Main Facility")
+    timezone: Mapped[str] = mapped_column(String(100), default="Asia/Kolkata")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_demo: Mapped[bool] = mapped_column(Boolean, default=False)
+    settings_json: Mapped[Optional[str]] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+    # Relationships
+    organization: Mapped["Organization"] = relationship(back_populates="workspaces")
+    resources: Mapped[List["Resource"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    goals: Mapped[List["Goal"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    metric_definitions: Mapped[List["MetricDefinition"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+
+
+class Goal(Base):
+    __tablename__ = "goals"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    goal_type: Mapped[str] = mapped_column(String(100), nullable=False)  # reduce_cost, improve_utilization, increase_capacity, reduce_downtime, avoid_shortage, custom
+    target_value: Mapped[float] = mapped_column(Float, nullable=False)
+    unit: Mapped[str] = mapped_column(String(50), default="%")
+    baseline_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    current_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    timeframe: Mapped[str] = mapped_column(String(50), default="Q4 2026")
+    status: Mapped[str] = mapped_column(String(50), default="In Progress")  # In Progress, Achieved, At Risk
+    priority: Mapped[str] = mapped_column(String(50), default="High")
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+    # Relationships
+    workspace: Mapped[Optional["Workspace"]] = relationship(back_populates="goals")
+
+
+class MetricDefinition(Base):
+    __tablename__ = "metric_definitions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), index=True, nullable=False)  # utilization, power_consumption, downtime, occupancy, throughput, operating_cost
+    unit: Mapped[str] = mapped_column(String(50), default="%")
+    category: Mapped[str] = mapped_column(String(50), default="Operations")
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    threshold_under: Mapped[Optional[float]] = mapped_column(Float, default=40.0)
+    threshold_over: Mapped[Optional[float]] = mapped_column(Float, default=90.0)
+    threshold_critical: Mapped[Optional[float]] = mapped_column(Float, default=95.0)
+    cost_per_unit: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    # Relationships
+    workspace: Mapped[Optional["Workspace"]] = relationship(back_populates="metric_definitions")
 
 
 class Building(Base):
@@ -81,10 +150,12 @@ class ResourceType(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)  # Classroom, Laboratory, Seminar Hall, Equipment
-    category: Mapped[str] = mapped_column(String(100), default="Space")  # Space, Hardware, Facility
-    unit: Mapped[str] = mapped_column(String(50), default="seats")
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)  # Machine, Bed, Vehicle, Room, Generator
+    category: Mapped[str] = mapped_column(String(100), default="Physical Asset")  # Space, Equipment, Workforce, Vehicle
+    unit: Mapped[str] = mapped_column(String(50), default="units")
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    attributes_schema: Mapped[Optional[str]] = mapped_column(Text, default="[]")
     config_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
@@ -99,21 +170,26 @@ class Resource(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
     building_id: Mapped[Optional[int]] = mapped_column(ForeignKey("buildings.id", ondelete="SET NULL"), nullable=True)
     resource_type_id: Mapped[int] = mapped_column(ForeignKey("resource_types.id", ondelete="RESTRICT"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     code: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, default=60)
+    unit: Mapped[str] = mapped_column(String(50), default="units")
     status: Mapped[str] = mapped_column(String(50), default="Active")  # Active, Inactive, Maintenance
     floor: Mapped[int] = mapped_column(Integer, default=1)
-    area: Mapped[float] = mapped_column(Float, default=750.0)  # sq ft
-    location: Mapped[str] = mapped_column(String(255), default="Wing A")
+    area: Mapped[float] = mapped_column(Float, default=750.0)  # sq ft or operational area
+    location: Mapped[str] = mapped_column(String(255), default="Main Zone")
+    group_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # Line 1, Zone A, Floor 2
+    attributes_json: Mapped[Optional[str]] = mapped_column(Text, default="{}")  # dynamic key-value attributes
     metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
     organization: Mapped["Organization"] = relationship(back_populates="resources")
+    workspace: Mapped[Optional["Workspace"]] = relationship(back_populates="resources")
     building: Mapped[Optional["Building"]] = relationship(back_populates="resources")
     resource_type: Mapped["ResourceType"] = relationship(back_populates="resources")
     schedules: Mapped[List["Schedule"]] = relationship(back_populates="resource", cascade="all, delete-orphan")
@@ -129,14 +205,19 @@ class Schedule(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
     resource_id: Mapped[int] = mapped_column(ForeignKey("resources.id", ondelete="CASCADE"), nullable=False)
-    subject_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    department: Mapped[str] = mapped_column(String(100), default="Computer Science")
+    subject_name: Mapped[str] = mapped_column(String(255), nullable=False)  # or event_name / task_name
+    event_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    department: Mapped[str] = mapped_column(String(100), default="General")  # or work_unit / group
+    work_unit: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     day_of_week: Mapped[str] = mapped_column(String(20), nullable=False)  # Monday, Tuesday, etc.
     start_time: Mapped[str] = mapped_column(String(10), nullable=False)  # HH:MM format e.g. "09:00"
     end_time: Mapped[str] = mapped_column(String(10), nullable=False)    # HH:MM format e.g. "10:00"
-    expected_occupancy: Mapped[int] = mapped_column(Integer, default=50)
+    expected_occupancy: Mapped[int] = mapped_column(Integer, default=50)  # or required_capacity / demand
+    required_capacity: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     actual_occupancy: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    attributes_json: Mapped[Optional[str]] = mapped_column(Text, default="{}")
     equipment_requirements: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON list of strings
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
@@ -299,9 +380,10 @@ class Scenario(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    base_period: Mapped[str] = mapped_column(String(100), default="Fall 2026")
+    base_period: Mapped[str] = mapped_column(String(100), default="Current Baseline")
     status: Mapped[str] = mapped_column(String(50), default="draft")  # draft, simulated, applied
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
@@ -348,6 +430,7 @@ class Recommendation(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
     resource_id: Mapped[Optional[int]] = mapped_column(ForeignKey("resources.id", ondelete="SET NULL"), nullable=True)
     recommendation_type: Mapped[str] = mapped_column(String(100), nullable=False)  # underutilization, overload, energy_spike
     priority: Mapped[str] = mapped_column(String(50), default="Medium")  # Low, Medium, High, Critical
@@ -366,6 +449,7 @@ class AuditLog(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     entity_type: Mapped[str] = mapped_column(String(100), nullable=False)
     entity_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -407,6 +491,7 @@ class Action(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
     recommendation_id: Mapped[Optional[int]] = mapped_column(ForeignKey("recommendations.id", ondelete="SET NULL"), nullable=True)
     action_type: Mapped[str] = mapped_column(String(100), nullable=False)  # schedule_consolidation, hvac_setback, bms_relay
     title: Mapped[str] = mapped_column(String(255), nullable=False)

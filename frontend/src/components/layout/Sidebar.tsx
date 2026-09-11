@@ -25,6 +25,7 @@ import {
   Settings,
   Cpu,
   Sparkles,
+  Target,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -45,19 +46,21 @@ const navSections: NavSection[] = [
   {
     title: "Overview",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Executive Home", href: "/dashboard", icon: LayoutDashboard, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Workspaces & Goals", href: "/workspace", icon: Target, roles: ["Administrator", "Analyst", "Viewer"], badge: "Multi-Domain" },
     ],
   },
   {
     title: "Operations",
     items: [
       { name: "Resources", href: "/resources", icon: Layers, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Buildings", href: "/buildings", icon: Building2, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Facilities & Zones", href: "/buildings", icon: Building2, roles: ["Administrator", "Analyst", "Viewer"] },
       { name: "Schedules", href: "/schedules", icon: CalendarDays, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
   {
     title: "Data Intelligence",
+
     items: [
       { name: "Data Sources", href: "/data-sources", icon: Database, roles: ["Administrator", "Analyst", "Viewer"] },
       { name: "Data Ingestion", href: "/imports", icon: UploadCloud, roles: ["Administrator"] },

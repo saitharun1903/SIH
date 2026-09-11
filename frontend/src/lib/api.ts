@@ -20,7 +20,9 @@ import {
   ScenarioResult,
   Building,
   Resource,
+  ResourceType,
   Schedule,
+
   PaginatedResponse,
   Recommendation,
   AuditLogEntry,
@@ -30,6 +32,10 @@ import {
   BenchmarkEvaluationReport,
   MacroGridProfile,
   MultiSourceIntelligenceResponse,
+  Workspace,
+  WorkspaceTemplate,
+  Goal,
+  SearchResultItem,
 } from "./types";
 
 const rawBase = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
@@ -342,6 +348,11 @@ class ApiClient {
     return res.items || [];
   }
 
+  async getResourceTypes(): Promise<ResourceType[]> {
+    return this.get<ResourceType[]>("/resource-types");
+  }
+
+
   async getSchedules(params?: {
     day_of_week?: string;
     resource_id?: number;
@@ -539,6 +550,63 @@ class ApiClient {
   async dispatchMultiSourceRecommendations(collisionIds?: number[]): Promise<{ status: string; dispatched_count: number; recommendations: string[] }> {
     return this.post("/analytics/multi-source/dispatch", { collision_ids: collisionIds });
   }
+
+  // Workspaces & Generalization
+  async getWorkspaces(): Promise<Workspace[]> {
+    return this.get<Workspace[]>("/workspaces");
+  }
+
+  async getWorkspace(id: number): Promise<Workspace> {
+    return this.get<Workspace>(`/workspaces/${id}`);
+  }
+
+  async createWorkspace(data: {
+    name: string;
+    code: string;
+    workspace_type: string;
+    description?: string;
+    location?: string;
+    primary_goals?: string[];
+    template_types?: string[];
+  }): Promise<Workspace> {
+    return this.post<Workspace>("/workspaces", data);
+  }
+
+  async updateWorkspace(id: number, data: Partial<Workspace>): Promise<Workspace> {
+    return this.put<Workspace>(`/workspaces/${id}`, data);
+  }
+
+  async getWorkspaceTemplates(): Promise<WorkspaceTemplate[]> {
+    return this.get<WorkspaceTemplate[]>("/workspaces/templates");
+  }
+
+  // Operational Goals
+  async getGoals(workspaceId?: number, statusFilter?: string): Promise<Goal[]> {
+    const params = new URLSearchParams();
+    if (workspaceId) params.append("workspace_id", workspaceId.toString());
+    if (statusFilter) params.append("status_filter", statusFilter);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return this.get<Goal[]>(`/goals${qs}`);
+  }
+
+  async createGoal(data: Partial<Goal>): Promise<Goal> {
+    return this.post<Goal>("/goals", data);
+  }
+
+  async updateGoal(id: number, data: Partial<Goal>): Promise<Goal> {
+    return this.put<Goal>(`/goals/${id}`, data);
+  }
+
+  async deleteGoal(id: number): Promise<void> {
+    return this.delete<void>(`/goals/${id}`);
+  }
+
+  // Grounded Universal Search
+  async search(query: string, workspaceId?: number): Promise<SearchResultItem> {
+    const qs = workspaceId ? `?q=${encodeURIComponent(query)}&workspace_id=${workspaceId}` : `?q=${encodeURIComponent(query)}`;
+    return this.get<SearchResultItem>(`/search${qs}`);
+  }
 }
+
 
 export const api = new ApiClient();

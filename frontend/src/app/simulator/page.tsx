@@ -38,9 +38,12 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useWorkspace } from "@/context/WorkspaceContext";
 
 export default function SimulatorPage() {
+  const { terminology } = useWorkspace();
   const [templates, setTemplates] = useState<ScenarioTemplate[]>([]);
+
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState<number | null>(null);
   const [activeResult, setActiveResult] = useState<ScenarioResult | null>(null);
@@ -442,12 +445,13 @@ export default function SimulatorPage() {
             <span className="font-semibold text-brand-navy">Active Policy Mutations:</span>
             {selectedScenario.changes.map((ch, idx) => (
               <span key={idx} className="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-slate-700 font-medium">
-                {ch.change_type === "deactivate_building" && `🏢 Close Building #${ch.parameters?.building_id || ch.target_resource_id}`}
-                {ch.change_type === "deactivate_resource" && `🚪 Close Room #${ch.target_resource_id}`}
-                {ch.change_type === "change_enrollment" && `👥 ${Math.round(((ch.parameters?.enrollment_multiplier || 1) - 1) * 100)}% Enrollment Surge`}
-                {ch.change_type === "move_day_online" && `🌐 ${ch.parameters?.day_of_week || "Friday"} Remote Learning`}
+                {ch.change_type === "deactivate_building" && `🏢 Close ${terminology.group} #${ch.parameters?.building_id || ch.target_resource_id}`}
+                {ch.change_type === "deactivate_resource" && `🚪 Deactivate ${terminology.resource} #${ch.target_resource_id}`}
+                {ch.change_type === "change_enrollment" && `👥 ${Math.round(((ch.parameters?.enrollment_multiplier || 1) - 1) * 100)}% Demand Surge`}
+                {ch.change_type === "move_day_online" && `🌐 ${ch.parameters?.day_of_week || "Friday"} Remote / Standby`}
               </span>
             ))}
+
           </div>
         )}
       </Card>

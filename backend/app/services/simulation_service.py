@@ -24,8 +24,8 @@ from app.services.optimization_service import solve_schedule_optimization
 SCENARIO_TEMPLATES = [
     {
         "template_id": "close_aryabhata_tower",
-        "title": "Aryabhata Tower HVAC/Solar Retrofit",
-        "description": "Simulate deactivating all laboratories and lecture rooms in Aryabhata Tower for green energy infrastructure upgrades. Tests campus capacity to absorb displaced sessions.",
+        "title": "Facility / Wing Retrofit & Maintenance",
+        "description": "Simulate deactivating all secondary rooms or machines in a facility wing for green infrastructure upgrades. Tests capacity to absorb displaced sessions.",
         "category": "Maintenance & Retrofit",
         "icon": "Building2",
         "default_changes": [
@@ -37,8 +37,8 @@ SCENARIO_TEMPLATES = [
     },
     {
         "template_id": "enrollment_surge_15",
-        "title": "+15% Academic Year Enrollment Surge",
-        "description": "Stress-test campus room capacity by simulating a 15% increase in cohort size across all academic departments. Identifies bottlenecked lecture halls.",
+        "title": "+15% Demand / Volume Surge",
+        "description": "Stress-test capacity by simulating a 15% increase in operational workload/demand units across all active groups. Identifies bottlenecked facilities.",
         "category": "Capacity Stress Test",
         "icon": "TrendingUp",
         "default_changes": [
@@ -50,8 +50,8 @@ SCENARIO_TEMPLATES = [
     },
     {
         "template_id": "move_friday_online",
-        "title": "Energy-Saver: Hybrid Remote Friday",
-        "description": "Transition all Friday timetable sessions to remote/online synchronous delivery. Evaluates campus-wide thermal energy and power bill reductions.",
+        "title": "Off-Peak / Remote Load Reduction",
+        "description": "Transition off-peak scheduled events (e.g. Friday/Weekend) to remote or standby delivery. Evaluates facility thermal energy and power bill reductions.",
         "category": "Sustainability & Energy",
         "icon": "Zap",
         "default_changes": [
@@ -63,8 +63,8 @@ SCENARIO_TEMPLATES = [
     },
     {
         "template_id": "consolidate_visvesvaraya",
-        "title": "Visvesvaraya Complex Off-Peak Consolidation",
-        "description": "Deactivate auxiliary workshop spaces in Visvesvaraya Complex to concentrate lab sessions into primary academic facilities, minimizing HVAC idling.",
+        "title": "Off-Peak Facility Consolidation",
+        "description": "Deactivate auxiliary workshop or secondary spaces to concentrate operations into primary facilities, minimizing HVAC and equipment idling.",
         "category": "Operational Efficiency",
         "icon": "Layers",
         "default_changes": [
@@ -77,9 +77,32 @@ SCENARIO_TEMPLATES = [
 ]
 
 
-def get_scenario_templates() -> List[Dict[str, Any]]:
-    """Returns curated institutional simulation templates."""
-    return SCENARIO_TEMPLATES
+def get_scenario_templates(db: Optional[Session] = None, org_id: Optional[int] = None) -> List[Dict[str, Any]]:
+    """Returns curated simulation templates, dynamically reflecting real database facilities when available."""
+    templates = [dict(t) for t in SCENARIO_TEMPLATES]
+    if not db or not org_id:
+        return templates
+
+    buildings = db.query(Building).filter(Building.organization_id == org_id).all()
+    if buildings:
+        b1 = buildings[0]
+        dyn_id = f"retrofit_bldg_{b1.id}"
+        if not any(t["template_id"] == dyn_id for t in templates):
+            templates.append({
+                "template_id": dyn_id,
+                "title": f"{b1.name} Infrastructure Retrofit",
+                "description": f"Simulate deactivating operational resources in {b1.name} ({b1.code}) for maintenance. Tests capacity to absorb displaced workload.",
+                "category": "Maintenance & Retrofit",
+                "icon": "Building2",
+                "default_changes": [
+                    {
+                        "change_type": "deactivate_building",
+                        "parameters": {"building_id": b1.id, "building_name": b1.name},
+                    }
+                ],
+            })
+    return templates
+
 
 
 def create_scenario(

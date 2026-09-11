@@ -17,13 +17,17 @@ from app.api.v1.actions import router as actions_router
 from app.api.v1.assistant import router as assistant_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.data_sources import router as data_sources_router
+from app.api.v1.workspaces import router as workspaces_router
+from app.api.v1.goals import router as goals_router
 from app.api.v1.seed import router as seed_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["System Health"])
 api_router.include_router(auth_router, tags=["Authentication"])
+api_router.include_router(workspaces_router, tags=["Workspaces & Generalization"])
+api_router.include_router(goals_router, tags=["Operational Goals"])
 api_router.include_router(org_router, tags=["Organizations"])
-api_router.include_router(buildings_router, tags=["Buildings"])
+api_router.include_router(buildings_router, tags=["Buildings & Facilities"])
 api_router.include_router(resource_types_router, tags=["Resource Types"])
 api_router.include_router(resources_router, tags=["Resources"])
 api_router.include_router(schedules_router, tags=["Schedules"])
@@ -37,5 +41,6 @@ api_router.include_router(optimization_router, tags=["Optimization Engine"])
 api_router.include_router(scenarios_router, tags=["What-If Simulator"])
 api_router.include_router(actions_router, tags=["Action Center"])
 api_router.include_router(assistant_router, tags=["AI Assistant"])
-api_router.include_router(reports_router, tags=["Institutional Reports"])
+api_router.include_router(reports_router, tags=["Intelligence Reports"])
 api_router.include_router(seed_router, tags=["Development Seed"])
+

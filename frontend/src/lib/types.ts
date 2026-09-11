@@ -727,3 +727,61 @@ export interface MultiSourceIntelligenceResponse {
   };
 }
 
+export interface Workspace {
+  id: number;
+  organization_id: number;
+  name: string;
+  code: string;
+  workspace_type: string; // factory, hospital, warehouse, office, education, custom
+  description?: string;
+  location: string;
+  timezone: string;
+  is_active: boolean;
+  is_demo: boolean;
+  settings_json?: string;
+  created_at: string;
+  updated_at: string;
+  resource_count?: number;
+  active_issue_count?: number;
+  goal_count?: number;
+}
+
+export interface WorkspaceTemplate {
+  template_id: string;
+  name: string;
+  category: string;
+  description: string;
+  icon: string;
+  suggested_resource_types: string[];
+  suggested_metrics: string[];
+  suggested_capabilities: string[];
+  default_goals: string[];
+}
+
+export interface Goal {
+  id: number;
+  organization_id: number;
+  workspace_id?: number;
+  title: string;
+  goal_type: string;
+  target_value: number;
+  unit: string;
+  baseline_value?: number;
+  current_value?: number;
+  timeframe: string;
+  status: string;
+  priority: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SearchResultItem {
+  resources: Array<{ id: number; name: string; code: string; type: string; location: string }>;
+  anomalies: Array<{ id: number; reason: string; severity: string; metric: string; status: string }>;
+  scenarios: Array<{ id: number; name: string; status: string; base_period?: string }>;
+  actions: Array<{ id: number; title: string; status: string; action_type: string }>;
+  goals: Array<{ id: number; title: string; target_value: number; unit: string; status: string }>;
+}
+
+

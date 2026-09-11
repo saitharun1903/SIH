@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useWorkspace } from "@/context/WorkspaceContext";
 import { api } from "@/lib/api";
+
 import { Resource, Building, ResourceType, PaginatedResponse } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -28,7 +30,9 @@ import {
 
 export default function ResourcesPage() {
   const { user, hasRole } = useAuth();
+  const { currentWorkspace, terminology } = useWorkspace();
   const isAdmin = hasRole(["Administrator"]);
+
 
   // Data state
   const [resources, setResources] = useState<Resource[]>([]);
@@ -209,14 +213,16 @@ export default function ResourcesPage() {
               Infrastructure Inventory
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-xs text-slate-500 font-medium">Physical Institutional Assets</span>
+            <span className="text-xs text-slate-500 font-medium">
+              {currentWorkspace ? `${currentWorkspace.name} (${currentWorkspace.workspace_type})` : "Physical & Operational Assets"}
+            </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-brand-navy flex items-center gap-2.5">
             <Layers className="h-6 w-6 text-brand-blue" />
-            Campus Spaces &amp; Resources
+            {terminology.resourcePlural}
           </h1>
           <p className="text-xs text-slate-600 mt-1">
-            Catalog of institutional lecture halls, computing laboratories, seminar rooms, and hardware ({total} recorded)
+            Operational catalog of {terminology.resourcePlural.toLowerCase()} and capacity allocation ({total} recorded)
           </p>
         </div>
 
@@ -235,11 +241,12 @@ export default function ResourcesPage() {
           {isAdmin && (
             <Button variant="primary" size="sm" onClick={handleOpenCreate} className="flex items-center gap-1.5 font-bold">
               <Plus className="h-4 w-4" />
-              <span>Add Resource</span>
+              <span>Add {terminology.resource}</span>
             </Button>
           )}
         </div>
       </div>
+
 
       {/* Filter and Search Bar */}
       <Card className="p-4 border-slate-200 bg-white shadow-subtle">

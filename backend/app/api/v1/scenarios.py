@@ -34,10 +34,12 @@ router = APIRouter()
     summary="Get Pre-configured Institutional Simulation Templates",
 )
 def get_templates(
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_viewer),
 ):
-    """Returns curated templates for building maintenance, enrollment surges, and hybrid Friday schedules."""
-    return get_scenario_templates()
+    """Returns curated templates for building maintenance, demand surges, and hybrid schedules."""
+    return get_scenario_templates(db=db, org_id=current_user.organization_id)
+
 
 
 @router.get(

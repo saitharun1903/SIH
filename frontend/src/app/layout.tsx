@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/context/AuthContext";
+import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
@@ -17,9 +18,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen antialiased bg-[#F9F9F9] text-brand-navy">
         <AuthProvider>
-          <AppLayout>{children}</AppLayout>
+          <WorkspaceProvider>
+            <AppLayout>{children}</AppLayout>
+          </WorkspaceProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
+
