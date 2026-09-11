@@ -7,11 +7,14 @@ from fastapi.encoders import jsonable_encoder
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.core.logging import StructuredLoggingMiddleware, logger
+from app.core.logging import StructuredLoggingMiddleware, register_db_timing_listener, logger
 from app.api.v1.router import api_router
 from app.db.base import Base
 from app.db.session import engine
 from app.db.init_db import init_initial_data
+
+# Register DB timing metrics hook on engine
+register_db_timing_listener(engine)
 
 
 @asynccontextmanager

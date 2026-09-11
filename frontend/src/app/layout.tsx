@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { NexusQueryProvider } from "@/lib/queryClient";
 import { AuthProvider } from "@/context/AuthContext";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -17,11 +18,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen antialiased bg-[#F9F9F9] text-brand-navy">
-        <AuthProvider>
-          <WorkspaceProvider>
-            <AppLayout>{children}</AppLayout>
-          </WorkspaceProvider>
-        </AuthProvider>
+        <NexusQueryProvider>
+          <AuthProvider>
+            <WorkspaceProvider>
+              <AppLayout>{children}</AppLayout>
+            </WorkspaceProvider>
+          </AuthProvider>
+        </NexusQueryProvider>
       </body>
     </html>
   );

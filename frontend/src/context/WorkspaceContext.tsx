@@ -73,21 +73,37 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("nexus_workspaces");
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("nexus_current_workspace");
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchWorkspaces = async () => {
     if (!user) {
       setWorkspaces([]);
       setCurrentWorkspace(null);
-      setIsLoading(false);
       return;
     }
 
     try {
       const list = await api.getWorkspaces();
       setWorkspaces(list);
+      localStorage.setItem("nexus_workspaces", JSON.stringify(list));
 
       if (list.length > 0) {
         const savedId = localStorage.getItem("nexus_workspace_id");
@@ -95,6 +111,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const selected = found || list[0];
         setCurrentWorkspace(selected);
         localStorage.setItem("nexus_workspace_id", selected.id.toString());
+        localStorage.setItem("nexus_current_workspace", JSON.stringify(selected));
       }
     } catch (err) {
       console.error("Failed to load workspaces", err);
@@ -112,6 +129,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (selected) {
       setCurrentWorkspace(selected);
       localStorage.setItem("nexus_workspace_id", selected.id.toString());
+      localStorage.setItem("nexus_current_workspace", JSON.stringify(selected));
     }
   };
 

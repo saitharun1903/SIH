@@ -8,6 +8,7 @@ import { Schedule, Resource, PaginatedResponse } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { CardSkeleton, TableSkeleton } from "@/components/common/SectionSkeleton";
 import {
   CalendarDays,
   Search,
@@ -309,11 +310,14 @@ export default function SchedulesPage() {
       </Card>
 
       {/* Content Rendering (Grid or Table) */}
-      {loading ? (
-        <Card className="bg-white border-slate-200 shadow-subtle p-12 text-center text-slate-500">
-          <div className="inline-block h-6 w-6 border-2 border-[#004E72] border-t-transparent rounded-full animate-spin mb-3" />
-          <div className="text-xs font-medium text-slate-600">Retrieving academic timetable...</div>
-        </Card>
+      {loading && schedules.length === 0 ? (
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardSkeleton count={6} className="h-40" />
+          </div>
+        ) : (
+          <TableSkeleton rows={6} cols={6} />
+        )
       ) : schedules.length === 0 ? (
         <Card className="bg-white border-slate-200 shadow-subtle p-12 text-center text-slate-500">
           <CalendarDays className="h-10 w-10 text-slate-300 mx-auto mb-3" />

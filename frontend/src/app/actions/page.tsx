@@ -34,6 +34,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { CardSkeleton, TableRowSkeleton } from "@/components/common/SectionSkeleton";
 
 export default function ActionCenterPage() {
   const { user } = useAuth();
@@ -230,6 +231,11 @@ export default function ActionCenterPage() {
       )}
 
       {/* Metric Cards */}
+      {loading && recommendations.length === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardSkeleton count={4} />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5 border-slate-200 bg-white shadow-subtle">
           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
@@ -265,6 +271,7 @@ export default function ActionCenterPage() {
           <div className="mt-2 text-xs text-slate-500">Logged to institutional audit trail</div>
         </Card>
       </div>
+      )}
 
       {/* Tabs & Filter Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-3">
@@ -337,11 +344,19 @@ export default function ActionCenterPage() {
       {/* Main Content Area */}
       {activeTab === "actions" ? (
         <div className="space-y-4">
-          {loading ? (
-            <Card className="py-12 text-center border-slate-200 bg-white">
-              <div className="inline-block h-6 w-6 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mb-2" />
-              <div className="text-xs text-slate-500">Loading operational actions...</div>
-            </Card>
+          {loading && recommendations.length === 0 ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-5 bg-white border border-slate-200 rounded-xl animate-pulse space-y-3 shadow-subtle">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-48 bg-slate-200 rounded" />
+                    <div className="h-5 w-16 bg-slate-100 rounded-full" />
+                  </div>
+                  <div className="h-3 w-full bg-slate-100 rounded" />
+                  <div className="h-3 w-2/3 bg-slate-100 rounded" />
+                </div>
+              ))}
+            </div>
           ) : filteredRecs.length === 0 ? (
             <Card className="py-12 text-center border-dashed border-slate-300 bg-white">
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
@@ -501,7 +516,9 @@ export default function ActionCenterPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono">
-                {auditLogs.length === 0 ? (
+                {loading && auditLogs.length === 0 ? (
+                  <TableRowSkeleton rows={5} cols={5} />
+                ) : auditLogs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-500 font-sans">
                       No audit log entries recorded yet.

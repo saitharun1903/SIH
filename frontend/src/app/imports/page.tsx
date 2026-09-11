@@ -20,6 +20,8 @@ import {
   FileText,
 } from "lucide-react";
 import clsx from "clsx";
+import { useImportJobsQuery } from "@/hooks/useNexusQueries";
+import { TableSkeleton, EmptyState, SectionError } from "@/components/common/SectionSkeleton";
 
 interface FieldDef {
   internal_field: string;
@@ -57,6 +59,9 @@ interface ImportSummary {
 export default function ImportsPage() {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Query recent import jobs independently (does not block file upload)
+  const { data: recentJobs, isLoading: jobsLoading, error: jobsError, refetch: refetchJobs } = useImportJobsQuery();
 
   // Workflow steps: 'upload' | 'inspect' | 'summary'
   const [step, setStep] = useState<"upload" | "inspect" | "summary">("upload");
@@ -119,6 +124,7 @@ export default function ImportsPage() {
       });
 
       setSummary(res);
+      refetchJobs();
       setStep("summary");
     } catch (err: any) {
       setUploadError(err.message || "Failed to confirm and persist import.");
@@ -210,7 +216,8 @@ export default function ImportsPage() {
 
       {/* STEP 1: FILE UPLOAD */}
       {step === "upload" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <Card className="bg-white border-slate-200 shadow-subtle p-8 text-center">
               <div
@@ -326,7 +333,97 @@ export default function ImportsPage() {
             </Card>
           </div>
         </div>
-      )}
+
+        {/* Section: Recent Ingestion Activity & Jobs */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-[#092634]">Recent Ingestion Jobs</h3>
+              <p className="text-xs text-[#64748B]">Batch dataset import executions and validation audit logs</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetchJobs()}
+              isLoading={jobsLoading}
+              className="text-xs h-7 text-[#64748B]"
+            >
+              <RefreshCw className="h-3 w-3 mr-1.5" />
+              Refresh
+            </Button>
+          </div>
+
+          {jobsLoading ? (
+            <TableSkeleton rows={3} cols={6} />
+          ) : jobsError ? (
+            <SectionError
+              title="Recent Ingestion Jobs"
+              message="Could not load dataset import history. Backend may be offline."
+              onRetry={() => refetchJobs()}
+            />
+          ) : !recentJobs?.items || recentJobs.items.length === 0 ? (
+            <EmptyState
+              icon={FileSpreadsheet}
+              title="No datasets imported yet"
+              description="Upload a CSV or Excel spreadsheet using the area above to ingest your first dataset."
+            />
+          ) : (
+            <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-subtle overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0] font-semibold">
+                    <tr>
+                      <th className="px-4 py-3">Job ID</th>
+                      <th className="px-4 py-3">Dataset Name</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Processed</th>
+                      <th className="px-4 py-3">Imported</th>
+                      <th className="px-4 py-3">Rejected</th>
+                      <th className="px-4 py-3">Started</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9] text-[#092634]">
+                    {recentJobs.items.map((job: any) => (
+                      <tr key={job.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
+                        <td className="px-4 py-3 font-mono text-[11px] text-[#64748B]">#{job.id}</td>
+                        <td className="px-4 py-3 font-semibold">{job.dataset_name || "Dataset"}</td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={job.status === "completed" ? "success" : job.status === "failed" ? "danger" : "warning"}
+                            size="sm"
+                          >
+                            {job.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 font-mono">{job.rows_processed?.toLocaleString() ?? 0}</td>
+                        <td className="px-4 py-3 font-mono text-emerald-700 font-semibold">{job.rows_imported?.toLocaleString() ?? 0}</td>
+                        <td className="px-4 py-3 font-mono text-rose-600 font-semibold">{job.rows_rejected?.toLocaleString() ?? 0}</td>
+                        <td className="px-4 py-3 text-[#64748B]">
+                          {job.started_at ? new Date(job.started_at).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {job.rows_rejected > 0 && (
+                            <a
+                              href={api.getImportJobErrorsUrl(job.id)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] font-semibold text-[#004E72] hover:underline"
+                            >
+                              Download Rejections
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
 
       {/* STEP 2: SCHEMA DETECTION & COLUMN MAPPING */}
       {step === "inspect" && inspection && (

@@ -5,6 +5,13 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
+import { useBuildingsQuery } from "@/hooks/useNexusQueries";
+import {
+  CardSkeleton,
+  ChartSkeleton,
+  TableRowSkeleton,
+  SectionError,
+} from "@/components/common/SectionSkeleton";
 import {
   AnalyticsSummary,
   UtilizationTrendPoint,
@@ -52,13 +59,14 @@ import {
 } from "recharts";
 
 export default function AnalyticsPage() {
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Cached buildings
+  const { data: buildings = [] } = useBuildingsQuery();
 
   // Filter states
   const [selectedBuilding, setSelectedBuilding] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "underutilized" | "overloaded" | "optimal">("all");
-  const [buildings, setBuildings] = useState<Building[]>([]);
 
   // View mode: "campus" | "multi_source"
   const [activeView, setActiveView] = useState<"campus" | "multi_source">("campus");
@@ -70,6 +78,15 @@ export default function AnalyticsPage() {
   const [dispatchSuccess, setDispatchSuccess] = useState<string | null>(null);
   const [dispatchedCollisionIds, setDispatchedCollisionIds] = useState<number[]>([]);
 
+  // Section Loading States
+  const [loadingSummary, setLoadingSummary] = useState<boolean>(true);
+  const [loadingTrends, setLoadingTrends] = useState<boolean>(true);
+  const [loadingRankings, setLoadingRankings] = useState<boolean>(true);
+  const [loadingComparisons, setLoadingComparisons] = useState<boolean>(true);
+  const [loadingMultiSource, setLoadingMultiSource] = useState<boolean>(false);
+
+  const loading = loadingSummary || loadingTrends || loadingRankings;
+
   // Analytics Data
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [utilizationTrends, setUtilizationTrends] = useState<UtilizationTrendPoint[]>([]);
@@ -78,44 +95,84 @@ export default function AnalyticsPage() {
   const [buildingAnalytics, setBuildingAnalytics] = useState<BuildingAnalytics[]>([]);
   const [peakDemand, setPeakDemand] = useState<PeakDemandPoint[]>([]);
 
-  const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const bId = selectedBuilding ? parseInt(selectedBuilding) : undefined;
+  const bId = selectedBuilding ? parseInt(selectedBuilding) : undefined;
 
-      const [
-        bldgData,
-        summaryData,
-        utilTrendsData,
-        nrgTrendsData,
-        rankData,
-        bldgAnalyticsData,
-        peakData,
-        multiSourceResp,
-      ] = await Promise.all([
-        api.getBuildingsList().catch(() => []),
-        api.getAnalyticsSummary({ building_id: bId }).catch(() => null),
+  const loadSummary = async () => {
+    setLoadingSummary(true);
+    try {
+      const data = await api.getAnalyticsSummary({ building_id: bId }).catch(() => null);
+      setSummary(data);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const loadTrends = async () => {
+    setLoadingTrends(true);
+    try {
+      const [u, e] = await Promise.all([
         api.getUtilizationTrends({ building_id: bId }).catch(() => []),
         api.getEnergyTrends({ building_id: bId }).catch(() => []),
-        api.getResourceRankings({ building_id: bId, limit: 100 }).catch(() => []),
+      ]);
+      setUtilizationTrends(u);
+      setEnergyTrends(e);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingTrends(false);
+    }
+  };
+
+  const loadRankings = async () => {
+    setLoadingRankings(true);
+    try {
+      const r = await api.getResourceRankings({ building_id: bId, limit: 100 }).catch(() => []);
+      setRankings(r);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingRankings(false);
+    }
+  };
+
+  const loadComparisons = async () => {
+    setLoadingComparisons(true);
+    try {
+      const [b, p] = await Promise.all([
         api.getBuildingComparison().catch(() => []),
         api.getPeakDemand().catch(() => []),
-        api.getMultiSourceIntelligence(cssiThreshold).catch(() => null),
       ]);
-
-      setBuildings(Array.isArray(bldgData) ? bldgData : []);
-      setSummary(summaryData);
-      setUtilizationTrends(utilTrendsData);
-      setEnergyTrends(nrgTrendsData);
-      setRankings(rankData);
-      setBuildingAnalytics(bldgAnalyticsData);
-      setPeakDemand(peakData);
-      if (multiSourceResp) setMultiSourceData(multiSourceResp);
-    } catch (err: any) {
-      setError(err.message || "Failed to load analytics data.");
+      setBuildingAnalytics(b);
+      setPeakDemand(p);
+    } catch {
+      // ignore
     } finally {
-      setLoading(false);
+      setLoadingComparisons(false);
+    }
+  };
+
+  const loadMultiSource = async () => {
+    setLoadingMultiSource(true);
+    try {
+      const data = await api.getMultiSourceIntelligence(cssiThreshold).catch(() => null);
+      if (data) setMultiSourceData(data);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMultiSource(false);
+    }
+  };
+
+  const loadData = () => {
+    setError(null);
+    loadSummary();
+    loadTrends();
+    loadRankings();
+    loadComparisons();
+    if (activeView === "multi_source") {
+      loadMultiSource();
     }
   };
 
@@ -151,8 +208,17 @@ export default function AnalyticsPage() {
   };
 
   useEffect(() => {
-    loadData();
+    loadSummary();
+    loadTrends();
+    loadRankings();
+    loadComparisons();
   }, [selectedBuilding]);
+
+  useEffect(() => {
+    if (activeView === "multi_source" && !multiSourceData) {
+      loadMultiSource();
+    }
+  }, [activeView]);
 
   // Format trend data for Recharts
   const formattedUtilData = useMemo(() => {
@@ -277,6 +343,11 @@ export default function AnalyticsPage() {
         {activeView === "campus" ? (
           <>
             {/* Dynamic KPI Cards */}
+            {loadingSummary && !summary ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <CardSkeleton count={4} />
+              </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Utilization Card */}
               <Card className="p-5 border-slate-200 bg-white shadow-subtle hover:border-slate-300 transition-all">
@@ -411,6 +482,7 @@ export default function AnalyticsPage() {
                 </div>
               </Card>
             </div>
+            )}
 
             {/* Charts Row 1: Time Series Utilization & Energy */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -429,7 +501,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="h-72 w-full">
-                  {formattedUtilData.length === 0 ? (
+                  {loadingTrends && formattedUtilData.length === 0 ? (
+                    <ChartSkeleton height="h-72" />
+                  ) : formattedUtilData.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-slate-400 text-sm">
                       No utilization time-series data available.
                     </div>
@@ -467,24 +541,14 @@ export default function AnalyticsPage() {
                           }}
                           formatter={(val: any) => [`${val}%`, "Utilization"]}
                         />
-                        <ReferenceLine
-                          y={40}
-                          stroke="#D97706"
-                          strokeDasharray="4 4"
-                          label={{ value: "Underutilized (40%)", fill: "#D97706", fontSize: 10, position: "insideBottomRight" }}
-                        />
-                        <ReferenceLine
-                          y={90}
-                          stroke="#DC2626"
-                          strokeDasharray="4 4"
-                          label={{ value: "Overloaded (90%)", fill: "#DC2626", fontSize: 10, position: "insideTopRight" }}
-                        />
+                        {/* Static threshold reference lines */}
+                        <ReferenceLine y={40} stroke="#F59E0B" strokeDasharray="4 4" label={{ value: "Under (40%)", fill: "#B45309", fontSize: 10, position: "insideBottomLeft" }} />
+                        <ReferenceLine y={90} stroke="#EF4444" strokeDasharray="4 4" label={{ value: "Over (90%)", fill: "#B91C1C", fontSize: 10, position: "insideTopLeft" }} />
                         <Area
                           type="monotone"
                           dataKey="utilization"
                           stroke="#004E72"
-                          strokeWidth={2.5}
-                          fillOpacity={1}
+                          strokeWidth={2}
                           fill="url(#utilGradientLight)"
                         />
                       </AreaChart>
@@ -508,7 +572,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="h-72 w-full">
-                  {formattedEnergyData.length === 0 ? (
+                  {loadingTrends && formattedEnergyData.length === 0 ? (
+                    <ChartSkeleton height="h-72" />
+                  ) : formattedEnergyData.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-slate-400 text-sm">
                       No energy telemetry records available.
                     </div>
@@ -567,7 +633,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="h-64 w-full">
-                  {buildingAnalytics.length === 0 ? (
+                  {loadingComparisons && buildingAnalytics.length === 0 ? (
+                    <ChartSkeleton height="h-64" />
+                  ) : buildingAnalytics.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-slate-400 text-sm">
                       No building comparison data available.
                     </div>
@@ -629,7 +697,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="h-64 w-full">
-                  {peakDemand.length === 0 ? (
+                  {loadingComparisons && peakDemand.length === 0 ? (
+                    <ChartSkeleton height="h-64" />
+                  ) : peakDemand.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-slate-400 text-sm">
                       No peak demand data available.
                     </div>
@@ -749,7 +819,9 @@ export default function AnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-mono text-xs">
-                    {filteredRankings.length === 0 ? (
+                    {loadingRankings && rankings.length === 0 ? (
+                      <TableRowSkeleton rows={6} cols={6} />
+                    ) : filteredRankings.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-8 text-center text-slate-500 font-sans">
                           No spaces match the selected category filter.

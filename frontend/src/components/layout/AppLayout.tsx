@@ -27,21 +27,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center justify-center text-[#092634]">
-        <div className="h-9 w-9 border-3 border-[#004E72] border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs font-semibold text-[#64748B] tracking-wide">
-          Connecting to NEXUS Engine...
-        </p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-[#F9F9F9] text-[#092634] flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />

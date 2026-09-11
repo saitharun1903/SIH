@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
+import { useBuildingsQuery } from "@/hooks/useNexusQueries";
+import { CardSkeleton, ChartSkeleton } from "@/components/common/SectionSkeleton";
 import {
   ForecastResponse,
   ForecastOverview,
@@ -57,7 +59,7 @@ export default function PredictionsPage() {
   const [selectedResource, setSelectedResource] = useState<string>("");
 
   // Options
-  const [buildings, setBuildings] = useState<Building[]>([]);
+  const { data: buildings = [] } = useBuildingsQuery();
   const [resources, setResources] = useState<Resource[]>([]);
 
   // Forecast Data
@@ -71,13 +73,11 @@ export default function PredictionsPage() {
   // Load selection options
   useEffect(() => {
     Promise.all([
-      api.getBuildingsList().catch(() => []),
       api.getResourcesList().catch(() => []),
       api.getForecastOverview().catch(() => null),
       api.getMacroGridTrends().catch(() => null),
     ])
-      .then(([bldgs, resList, overData, macroData]) => {
-        setBuildings(Array.isArray(bldgs) ? bldgs : []);
+      .then(([resList, overData, macroData]) => {
         setResources(Array.isArray(resList) ? resList : []);
         setOverview(overData);
         if (macroData) setMacroProfile(macroData);
@@ -228,6 +228,11 @@ export default function PredictionsPage() {
       )}
 
       {/* Dynamic Metric Cards */}
+      {loading && !forecastData ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardSkeleton count={4} />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Average Forecasted Load */}
         <Card className="p-5 border-slate-200 bg-white shadow-subtle">
@@ -320,6 +325,7 @@ export default function PredictionsPage() {
           </div>
         </Card>
       </div>
+      )}
 
       {/* Regional Macro Grid & Weather Auxiliary Panel */}
       {showMacroPanel && macroProfile && (
@@ -492,7 +498,9 @@ export default function PredictionsPage() {
         </div>
 
         <div className="h-80 w-full">
-          {combinedChartData.length === 0 ? (
+          {loading && combinedChartData.length === 0 ? (
+            <ChartSkeleton height="h-80" />
+          ) : combinedChartData.length === 0 ? (
             <div className="h-full flex items-center justify-center text-slate-400 text-sm">
               No forecast points computed for this configuration.
             </div>

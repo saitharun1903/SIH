@@ -8,6 +8,7 @@ import { Building, PaginatedResponse } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { CardSkeleton } from "@/components/common/SectionSkeleton";
 import {
   Building2,
   Plus,
@@ -230,11 +231,10 @@ export default function BuildingsPage() {
       </Card>
 
       {/* Buildings Cards Grid */}
-      {loading ? (
-        <Card className="bg-white border-slate-200 p-12 text-center text-slate-500 shadow-subtle">
-          <div className="inline-block h-6 w-6 border-2 border-[#004E72] border-t-transparent rounded-full animate-spin mb-3" />
-          <div className="text-xs font-medium text-slate-600">Loading campus infrastructure...</div>
-        </Card>
+      {loading && buildings.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <CardSkeleton count={6} className="h-44" />
+        </div>
       ) : buildings.length === 0 ? (
         <Card className="bg-white border-slate-200 p-12 text-center text-slate-500 shadow-subtle">
           <Building2 className="h-10 w-10 text-slate-300 mx-auto mb-3" />

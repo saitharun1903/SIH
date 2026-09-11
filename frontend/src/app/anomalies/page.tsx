@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { api } from "@/lib/api";
+import { useBuildingsQuery } from "@/hooks/useNexusQueries";
+import { CardSkeleton, TableRowSkeleton } from "@/components/common/SectionSkeleton";
 import { Anomaly, AnomalySummary, Building, BenchmarkEvaluationReport } from "@/lib/types";
 import {
   AlertTriangle,
@@ -45,11 +47,13 @@ export default function AnomaliesPage() {
   const [benchmarking, setBenchmarking] = useState<boolean>(false);
   const [benchmarkContamination, setBenchmarkContamination] = useState<number>(0.05);
 
+  // Cached buildings
+  const { data: buildings = [] } = useBuildingsQuery();
+
   // Data states
   const [summary, setSummary] = useState<AnomalySummary | null>(null);
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [buildings, setBuildings] = useState<Building[]>([]);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("Active");
@@ -75,8 +79,8 @@ export default function AnomaliesPage() {
     setError(null);
     try {
       const bId = selectedBuilding ? parseInt(selectedBuilding) : undefined;
-      const [sumData, anomData, bldgData] = await Promise.all([
-        api.getAnomalySummary(),
+      const [sumData, anomData] = await Promise.all([
+        api.getAnomalySummary().catch(() => null),
         api.getAnomalies({
           status: statusFilter === "all" ? undefined : statusFilter,
           severity: severityFilter === "all" ? undefined : severityFilter,
@@ -84,14 +88,12 @@ export default function AnomaliesPage() {
           building_id: bId,
           limit: pageSize,
           offset: page * pageSize,
-        }),
-        api.getBuildingsList().catch(() => []),
+        }).catch(() => ({ items: [], total: 0, limit: pageSize, offset: 0 })),
       ]);
 
-      setSummary(sumData);
-      setAnomalies(anomData.items);
-      setTotalCount(anomData.total);
-      setBuildings(Array.isArray(bldgData) ? bldgData : []);
+      if (sumData) setSummary(sumData);
+      setAnomalies(anomData.items || []);
+      setTotalCount(anomData.total || 0);
     } catch (err: any) {
       setError(err.message || "Failed to load anomaly telemetry.");
     } finally {
@@ -433,6 +435,11 @@ export default function AnomaliesPage() {
       )}
 
       {/* Summary KPI Cards */}
+      {loading && !summary ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardSkeleton count={4} />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5 border-slate-200 bg-white shadow-subtle">
           <div className="flex items-center justify-between mb-2">
@@ -494,6 +501,7 @@ export default function AnomaliesPage() {
           <div className="mt-2 text-xs text-emerald-800 font-medium">Archived to institutional audit</div>
         </Card>
       </div>
+      )}
 
       {/* Filter Bar */}
       <Card className="p-4 border-slate-200 bg-white shadow-subtle">
@@ -585,12 +593,7 @@ export default function AnomaliesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-slate-500">
-                    <div className="inline-block h-6 w-6 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mb-2" />
-                    <div>Loading operational anomaly records...</div>
-                  </td>
-                </tr>
+                <TableRowSkeleton rows={6} cols={7} />
               ) : anomalies.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-slate-500 font-sans">

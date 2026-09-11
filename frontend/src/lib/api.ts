@@ -38,10 +38,18 @@ import {
   SearchResultItem,
 } from "./types";
 
-const rawBase = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-const API_BASE = rawBase.endsWith("/api/v1")
-  ? rawBase
-  : `${rawBase.replace(/\/+$/, "")}/api/v1`;
+const getBaseUrl = (): string => {
+  if (typeof window !== "undefined") {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (envUrl && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
+      return envUrl.endsWith("/api/v1") ? envUrl : `${envUrl.replace(/\/+$/, "")}/api/v1`;
+    }
+    // In browser production/preview, use same-origin relative `/api/v1` for instant CDN routing
+    return "/api/v1";
+  }
+  const raw = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+  return raw.endsWith("/api/v1") ? raw : `${raw.replace(/\/+$/, "")}/api/v1`;
+};
 
 class ApiClient {
   public getToken(): string | null {
@@ -52,9 +60,10 @@ class ApiClient {
   }
 
   public getApiUrl(path: string): string {
+    const base = getBaseUrl();
     const clean = path.startsWith("/api/v1") ? path.substring(7) : path;
     const normalized = clean.startsWith("/") ? clean : `/${clean}`;
-    return `${API_BASE}${normalized}`;
+    return `${base}${normalized}`;
   }
 
   private async request<T>(
@@ -79,29 +88,45 @@ class ApiClient {
       cleanEndpoint = `/${cleanEndpoint}`;
     }
 
-    const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${cleanEndpoint}`;
+    const base = getBaseUrl();
+    const url = endpoint.startsWith("http") ? endpoint : `${base}${cleanEndpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    // 8-second client timeout to prevent indefinite hangs
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const signal = options.signal || controller.signal;
 
-    if (response.status === 401) {
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        localStorage.removeItem("nexus_access_token");
-        localStorage.removeItem("nexus_user");
-        window.location.href = "/login?expired=1";
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal,
+        headers,
+      });
+
+      if (response.status === 401) {
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+          localStorage.removeItem("nexus_access_token");
+          localStorage.removeItem("nexus_user");
+          window.location.href = "/login?expired=1";
+        }
       }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data?.error?.message || data?.detail || `Request failed with status ${response.status}`;
+        throw new Error(errorMsg);
+      }
+
+      return data;
+    } catch (err: any) {
+      if (err.name === "AbortError") {
+        throw new Error(`Request timed out after 8s: ${cleanEndpoint}`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      const errorMsg = data?.error?.message || data?.detail || `Request failed with status ${response.status}`;
-      throw new Error(errorMsg);
-    }
-
-    return data;
   }
 
   get<T>(endpoint: string): Promise<T> {
@@ -476,7 +501,11 @@ class ApiClient {
 
   getExportUrl(type: "utilization" | "anomalies" | "energy"): string {
     const token = this.getToken();
-    return `${API_BASE}/reports/export/${type}-csv${token ? `?token=${token}` : ""}`;
+    return `${getBaseUrl()}/reports/export/${type}-csv${token ? `?token=${token}` : ""}`;
+  }
+
+  async getImportJobs(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<any>> {
+    return this.get<PaginatedResponse<any>>(`/imports/jobs?page=${page}&page_size=${pageSize}`);
   }
 
   async inspectImportFile(file: File): Promise<any> {
@@ -487,7 +516,7 @@ class ApiClient {
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
-    const res = await fetch(`${API_BASE}/imports/inspect`, {
+    const res = await fetch(`${getBaseUrl()}/imports/inspect`, {
       method: "POST",
       headers,
       body: formData,
@@ -501,11 +530,11 @@ class ApiClient {
 
   getImportJobErrorsUrl(jobId: number): string {
     const token = this.getToken();
-    return `${API_BASE}/imports/jobs/${jobId}/errors${token ? `?token=${token}` : ""}`;
+    return `${getBaseUrl()}/imports/jobs/${jobId}/errors${token ? `?token=${token}` : ""}`;
   }
 
   getImportTemplateUrl(type: string): string {
-    return `${API_BASE}/imports/templates/${type}`;
+    return `${getBaseUrl()}/imports/templates/${type}`;
   }
 
   // Phase 1 & 2: Data Source Registry & Kaggle Ingestion

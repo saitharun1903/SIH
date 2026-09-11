@@ -25,31 +25,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const router = useRouter();
 
   useEffect(() => {
-    const initAuth = async () => {
+    const initAuth = () => {
       try {
         const storedToken = localStorage.getItem("nexus_access_token");
         const storedUser = localStorage.getItem("nexus_user");
         const storedOrg = localStorage.getItem("nexus_org");
 
         if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-          if (storedOrg) setOrganization(JSON.parse(storedOrg));
-
-          // Verify token against /auth/me
           try {
-            const profile = await api.getProfile();
-            setUser(profile);
-            localStorage.setItem("nexus_user", JSON.stringify(profile));
-          } catch (e) {
-            // Token expired or invalid
-            localStorage.removeItem("nexus_access_token");
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setToken(storedToken);
+            if (storedOrg) setOrganization(JSON.parse(storedOrg));
+          } catch (parseErr) {
+            console.warn("Invalid cached user JSON, clearing", parseErr);
             localStorage.removeItem("nexus_user");
-            localStorage.removeItem("nexus_org");
-            setToken(null);
-            setUser(null);
-            setOrganization(null);
           }
+
+          // Unblock shell immediately - cached session is ready
+          setIsLoading(false);
+
+          // Verify token against /auth/me in background (stale-while-revalidate)
+          api
+            .getProfile()
+            .then((profile) => {
+              setUser(profile);
+              localStorage.setItem("nexus_user", JSON.stringify(profile));
+            })
+            .catch((e: any) => {
+              const msg = e?.message || "";
+              if (msg.includes("401") || msg.includes("Unauthorized") || msg.includes("expired")) {
+                localStorage.removeItem("nexus_access_token");
+                localStorage.removeItem("nexus_user");
+                localStorage.removeItem("nexus_org");
+                setToken(null);
+                setUser(null);
+                setOrganization(null);
+              }
+            });
+          return;
         }
       } catch (err) {
         console.error("Failed to initialize authentication", err);

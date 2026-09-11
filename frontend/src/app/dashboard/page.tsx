@@ -20,6 +20,7 @@ import {
   Recommendation,
   Building,
 } from "@/lib/types";
+import { CardSkeleton, ChartSkeleton, SectionError } from "@/components/common/SectionSkeleton";
 import {
   AreaChart,
   Area,
@@ -53,8 +54,13 @@ export default function DashboardPage() {
   const { currentWorkspace, terminology } = useWorkspace();
   const isAdmin = hasRole(["Administrator"]);
 
-  // State
-  const [loading, setLoading] = useState(true);
+  // Granular section loading states
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [utilLoading, setUtilLoading] = useState(true);
+  const [energyLoading, setEnergyLoading] = useState(true);
+  const [anomLoading, setAnomLoading] = useState(true);
+  const [recsLoading, setRecsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [elapsedText, setElapsedText] = useState("Just now");
@@ -64,7 +70,6 @@ export default function DashboardPage() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("7d");
-
 
   // Real Database Data
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
@@ -91,75 +96,68 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [lastUpdated]);
 
-  const loadDashboardData = async (isManualRefresh = false) => {
+  const loadDashboardData = (isManualRefresh = false) => {
     if (isManualRefresh) setRefreshing(true);
-    else setLoading(true);
     setError(null);
+    const bldgParam = selectedBuilding !== "all" ? parseInt(selectedBuilding) : undefined;
 
-    try {
-      const bldgParam = selectedBuilding !== "all" ? parseInt(selectedBuilding) : undefined;
+    // 1. Buildings (cached)
+    api.getBuildingsList()
+      .then((b) => setBuildings(Array.isArray(b) ? b : []))
+      .catch(() => {});
 
-      const [
-        bldgsRes,
-        summaryRes,
-        anomSummRes,
-        forecastRes,
-        utilRes,
-        energyRes,
-        anomListRes,
-        recsRes,
-      ] = await Promise.all([
-        api.getBuildingsList().catch((e) => {
-          console.error("Failed to load buildings list", e);
-          return [];
-        }),
-        api.getAnalyticsSummary({ building_id: bldgParam }).catch((e) => {
-          console.error("Failed to load analytics summary", e);
-          return null;
-        }),
-        api.getAnomalySummary().catch((e) => {
-          console.error("Failed to load anomaly summary", e);
-          return null;
-        }),
-        api.getForecastOverview().catch((e) => {
-          console.error("Failed to load forecast overview", e);
-          return null;
-        }),
-        api.getUtilizationTrends({ building_id: bldgParam }).catch((e) => {
-          console.error("Failed to load utilization trends", e);
-          return [];
-        }),
-        api.getEnergyTrends({ building_id: bldgParam }).catch((e) => {
-          console.error("Failed to load energy trends", e);
-          return [];
-        }),
-        api.getAnomalies({ status: "Active", building_id: bldgParam, limit: 4 }).catch((e) => {
-          console.error("Failed to load anomalies", e);
-          return { items: [], total: 0, limit: 4, offset: 0 };
-        }),
-        api.getRecommendations({ status: "Active" }).catch((e) => {
-          console.error("Failed to load recommendations", e);
-          return [];
-        }),
-      ]);
+    // 2. Summary (KPIs)
+    setSummaryLoading(true);
+    api.getAnalyticsSummary({ building_id: bldgParam })
+      .then((s) => setSummary(s))
+      .catch(() => setSummary(null))
+      .finally(() => {
+        setSummaryLoading(false);
+        setInitialLoading(false);
+      });
 
-      setBuildings(Array.isArray(bldgsRes) ? bldgsRes : []);
-      setSummary(summaryRes);
-      setAnomalySummary(anomSummRes);
-      setForecastOverview(forecastRes);
-      setUtilizationTrends(Array.isArray(utilRes) ? utilRes : []);
-      setEnergyTrends(Array.isArray(energyRes) ? energyRes : []);
-      setPriorityAnomalies(Array.isArray(anomListRes?.items) ? anomListRes.items : []);
-      setRecommendations(Array.isArray(recsRes) ? recsRes : []);
-      setLastUpdated(new Date());
-      setElapsedText("Just now");
-    } catch (err: any) {
-      console.error("Failed to load dashboard data", err);
-      setError("Unable to load operational dashboard. Please retry or check backend health.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+    // 3. Anomaly Summary
+    api.getAnomalySummary()
+      .then((a) => setAnomalySummary(a))
+      .catch(() => setAnomalySummary(null));
+
+    // 4. Forecast Overview
+    api.getForecastOverview()
+      .then((f) => setForecastOverview(f))
+      .catch(() => setForecastOverview(null));
+
+    // 5. Utilization Trends (Left Chart)
+    setUtilLoading(true);
+    api.getUtilizationTrends({ building_id: bldgParam })
+      .then((u) => setUtilizationTrends(Array.isArray(u) ? u : []))
+      .catch(() => setUtilizationTrends([]))
+      .finally(() => setUtilLoading(false));
+
+    // 6. Energy Trends (Right Chart)
+    setEnergyLoading(true);
+    api.getEnergyTrends({ building_id: bldgParam })
+      .then((e) => setEnergyTrends(Array.isArray(e) ? e : []))
+      .catch(() => setEnergyTrends([]))
+      .finally(() => {
+        setEnergyLoading(false);
+        setRefreshing(false);
+        setLastUpdated(new Date());
+        setElapsedText("Just now");
+      });
+
+    // 7. Priority Anomalies
+    setAnomLoading(true);
+    api.getAnomalies({ status: "Active", building_id: bldgParam, limit: 4 })
+      .then((res) => setPriorityAnomalies(Array.isArray(res?.items) ? res.items : []))
+      .catch(() => setPriorityAnomalies([]))
+      .finally(() => setAnomLoading(false));
+
+    // 8. Recommendations
+    setRecsLoading(true);
+    api.getRecommendations({ status: "Active" })
+      .then((r) => setRecommendations(Array.isArray(r) ? r : []))
+      .catch(() => setRecommendations([]))
+      .finally(() => setRecsLoading(false));
   };
 
   useEffect(() => {
@@ -215,15 +213,17 @@ export default function DashboardPage() {
   // State 4: Operational data exists
   const dashboardState = useMemo(() => {
     if (!currentWorkspace) return 1;
+    // While initial summary is loading, assume State 4 to show skeletons without layout shift
+    if (summaryLoading && initialLoading) return 4;
     const hasResources = (summary?.total_spaces_analyzed ?? 0) > 0 || buildings.length > 0;
-    if (!hasResources) return 2;
+    if (!hasResources && !summaryLoading) return 2;
     const hasTelemetry =
       (utilizationTrends && utilizationTrends.length > 0) ||
       (energyTrends && energyTrends.length > 0) ||
       (summary && summary.overall_utilization_percent > 0);
-    if (!hasTelemetry) return 3;
+    if (!hasTelemetry && !summaryLoading && !utilLoading) return 3;
     return 4;
-  }, [currentWorkspace, summary, buildings, utilizationTrends, energyTrends]);
+  }, [currentWorkspace, summary, buildings, utilizationTrends, energyTrends, summaryLoading, initialLoading, utilLoading]);
 
   return (
     <div className="space-y-6">
@@ -422,119 +422,123 @@ export default function DashboardPage() {
       {dashboardState === 4 && (
         <>
           {/* 2. Key Performance Area (4 Restrained High-Value Metrics) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1: Resource Efficiency */}
-        <Card className="hover:border-[#CBD5E1] transition-colors">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Resource Efficiency
-              </p>
-              <div className="mt-2 flex items-baseline space-x-2">
-                <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
-                  {loading ? "..." : summary ? `${summary.overall_utilization_percent}%` : "No data"}
-                </span>
-                {summary && (
-                  <Badge
-                    variant={summary.overall_utilization_percent >= 50 ? "success" : "warning"}
-                    size="sm"
-                  >
-                    {summary.overall_utilization_percent >= 50 ? "Optimal" : "Sub-optimal"}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-[11px] text-[#64748B] mt-1.5">
-                {summary?.total_scheduled_hours?.toLocaleString() || 0} scheduled seat-hours
-              </p>
+          {summaryLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <CardSkeleton count={4} />
             </div>
-            <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-          </div>
-        </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Metric 1: Resource Efficiency */}
+              <Card className="hover:border-[#CBD5E1] transition-colors">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                      Resource Efficiency
+                    </p>
+                    <div className="mt-2 flex items-baseline space-x-2">
+                      <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
+                        {summary ? `${summary.overall_utilization_percent}%` : "No data"}
+                      </span>
+                      {summary && (
+                        <Badge
+                          variant={summary.overall_utilization_percent >= 50 ? "success" : "warning"}
+                          size="sm"
+                        >
+                          {summary.overall_utilization_percent >= 50 ? "Optimal" : "Sub-optimal"}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#64748B] mt-1.5">
+                      {summary?.total_scheduled_hours?.toLocaleString() || 0} scheduled seat-hours
+                    </p>
+                  </div>
+                  <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
+                    <TrendingUp className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
 
-        {/* Metric 2: Monitored Resources */}
-        <Card className="hover:border-[#CBD5E1] transition-colors">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Resources Monitored
-              </p>
-              <div className="mt-2 flex items-baseline space-x-2">
-                <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
-                  {loading ? "..." : summary?.total_spaces_analyzed ?? "0"}
-                </span>
-                <span className="text-xs text-[#64748B] font-medium">spaces</span>
-              </div>
-              <p className="text-[11px] text-[#64748B] mt-1.5">
-                {summary?.total_capacity_seats?.toLocaleString() || 0} total institutional seats
-              </p>
-            </div>
-            <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
-              <Layers className="h-4 w-4" />
-            </div>
-          </div>
-        </Card>
+              {/* Metric 2: Monitored Resources */}
+              <Card className="hover:border-[#CBD5E1] transition-colors">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                      Resources Monitored
+                    </p>
+                    <div className="mt-2 flex items-baseline space-x-2">
+                      <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
+                        {summary?.total_spaces_analyzed ?? "0"}
+                      </span>
+                      <span className="text-xs text-[#64748B] font-medium">spaces</span>
+                    </div>
+                    <p className="text-[11px] text-[#64748B] mt-1.5">
+                      {summary?.total_capacity_seats?.toLocaleString() || 0} total institutional seats
+                    </p>
+                  </div>
+                  <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
+                    <Layers className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
 
-        {/* Metric 3: Active Issues */}
-        <Card className="hover:border-[#CBD5E1] transition-colors">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Active Issues
-              </p>
-              <div className="mt-2 flex items-baseline space-x-2">
-                <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
-                  {loading ? "..." : anomalySummary?.active_count ?? 0}
-                </span>
-                <Badge
-                  variant={(anomalySummary?.active_count || 0) > 0 ? "orange" : "success"}
-                  size="sm"
-                >
-                  {(anomalySummary?.active_count || 0) > 0 ? "Requires Action" : "Nominal"}
-                </Badge>
-              </div>
-              <p className="text-[11px] text-[#64748B] mt-1.5">
-                {anomalySummary?.estimated_financial_loss
-                  ? `₹${anomalySummary.estimated_financial_loss.toLocaleString(undefined, { maximumFractionDigits: 0 })} estimated waste`
-                  : "No loss recorded"}
-              </p>
-            </div>
-            <div className="h-9 w-9 rounded-lg bg-[#FFF1ED] text-[#D8481E] flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-4 w-4" />
-            </div>
-          </div>
-        </Card>
+              {/* Metric 3: Active Issues */}
+              <Card className="hover:border-[#CBD5E1] transition-colors">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                      Active Issues
+                    </p>
+                    <div className="mt-2 flex items-baseline space-x-2">
+                      <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
+                        {anomalySummary?.active_count ?? 0}
+                      </span>
+                      <Badge
+                        variant={(anomalySummary?.active_count || 0) > 0 ? "orange" : "success"}
+                        size="sm"
+                      >
+                        {(anomalySummary?.active_count || 0) > 0 ? "Requires Action" : "Nominal"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-[#64748B] mt-1.5">
+                      {anomalySummary?.estimated_financial_loss
+                        ? `₹${anomalySummary.estimated_financial_loss.toLocaleString(undefined, { maximumFractionDigits: 0 })} estimated waste`
+                        : "No loss recorded"}
+                    </p>
+                  </div>
+                  <div className="h-9 w-9 rounded-lg bg-[#FFF1ED] text-[#D8481E] flex items-center justify-center shrink-0">
+                    <AlertTriangle className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
 
-        {/* Metric 4: Forecasted Demand Pressure */}
-        <Card className="hover:border-[#CBD5E1] transition-colors">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Demand Pressure
-              </p>
-              <div className="mt-2 flex items-baseline space-x-2">
-                <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
-                  {loading
-                    ? "..."
-                    : forecastOverview?.avg_forecasted_utilization !== undefined
-                    ? `${forecastOverview.avg_forecasted_utilization}%`
-                    : "Stable"}
-                </span>
-                <Badge variant="blue" size="sm">
-                  P90 Horizon
-                </Badge>
-              </div>
-              <p className="text-[11px] text-[#64748B] mt-1.5">
-                Peak forecast: {forecastOverview?.peak_forecasted_utilization ?? (forecastOverview as any)?.peak_utilization_surge ?? 0}%
-              </p>
+              {/* Metric 4: Forecasted Demand Pressure */}
+              <Card className="hover:border-[#CBD5E1] transition-colors">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                      Demand Pressure
+                    </p>
+                    <div className="mt-2 flex items-baseline space-x-2">
+                      <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
+                        {forecastOverview?.avg_forecasted_utilization !== undefined
+                          ? `${forecastOverview.avg_forecasted_utilization}%`
+                          : "Stable"}
+                      </span>
+                      <Badge variant="blue" size="sm">
+                        P90 Horizon
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-[#64748B] mt-1.5">
+                      Peak forecast: {forecastOverview?.peak_forecasted_utilization ?? (forecastOverview as any)?.peak_utilization_surge ?? 0}%
+                    </p>
+                  </div>
+                  <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
-              <Zap className="h-4 w-4" />
-            </div>
-          </div>
-        </Card>
-      </div>
+          )}
 
       {/* 3. Main Intelligence Panel: "What's happening" */}
       {topNarrative && (
@@ -597,10 +601,8 @@ export default function DashboardPage() {
             </Link>
           }
         >
-          {loading ? (
-            <div className="h-60 flex items-center justify-center text-xs text-[#64748B]">
-              Loading utilization telemetry...
-            </div>
+          {utilLoading ? (
+            <ChartSkeleton height="h-60" title="Spatial Utilization Trend" />
           ) : utilizationTrends.length > 0 ? (
             <div className="h-60 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -681,10 +683,8 @@ export default function DashboardPage() {
             </Link>
           }
         >
-          {loading ? (
-            <div className="h-60 flex items-center justify-center text-xs text-[#64748B]">
-              Loading energy telemetry...
-            </div>
+          {energyLoading ? (
+            <ChartSkeleton height="h-60" title="Campus Energy Demand" />
           ) : energyTrends.length > 0 ? (
             <div className="h-60 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -761,7 +761,7 @@ export default function DashboardPage() {
             </Link>
           }
         >
-          {loading ? (
+          {anomLoading && priorityAnomalies.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#64748B]">Loading issues...</div>
           ) : Array.isArray(priorityAnomalies) && priorityAnomalies.length > 0 ? (
             <div className="divide-y divide-[#F1F5F9] -mx-5 -my-5">
@@ -837,7 +837,7 @@ export default function DashboardPage() {
             </Link>
           }
         >
-          {loading ? (
+          {recsLoading && recommendations.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#64748B]">Loading recommendations...</div>
           ) : Array.isArray(recommendations) && recommendations.length > 0 ? (
             <div className="divide-y divide-[#F1F5F9] -mx-5 -my-5">

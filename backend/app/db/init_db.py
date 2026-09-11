@@ -31,6 +31,26 @@ def migrate_schema() -> None:
                 ("actions", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
                 ("audit_logs", "workspace_id", "INTEGER REFERENCES workspaces(id)"),
             ]
+            indexes = [
+                ("idx_resources_workspace_id", "resources", "workspace_id"),
+                ("idx_resources_building_id", "resources", "building_id"),
+                ("idx_resources_status", "resources", "status"),
+                ("idx_schedules_workspace_id", "schedules", "workspace_id"),
+                ("idx_schedules_resource_id", "schedules", "resource_id"),
+                ("idx_schedules_day_of_week", "schedules", "day_of_week"),
+                ("idx_telemetry_resource_ts", "telemetry", "resource_id, timestamp"),
+                ("idx_anomalies_workspace_id", "anomalies", "workspace_id"),
+                ("idx_anomalies_resource_id", "anomalies", "resource_id"),
+                ("idx_anomalies_status", "anomalies", "status"),
+                ("idx_recommendations_workspace_id", "recommendations", "workspace_id"),
+                ("idx_recommendations_status", "recommendations", "status"),
+                ("idx_actions_workspace_id", "actions", "workspace_id"),
+                ("idx_actions_status", "actions", "status"),
+                ("idx_audit_logs_workspace_id", "audit_logs", "workspace_id"),
+                ("idx_scenarios_workspace_id", "scenarios", "workspace_id"),
+                ("idx_goals_workspace_id", "goals", "workspace_id"),
+            ]
+
             if "sqlite" in url_str:
                 cursor = conn.connection.cursor()
                 for table, col, col_type in migrations:
@@ -40,12 +60,22 @@ def migrate_schema() -> None:
                             cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
                     except Exception:
                         pass
+                for idx_name, table, cols in indexes:
+                    try:
+                        cursor.execute(f"CREATE INDEX IF NOT EXISTS {idx_name} ON {table} ({cols})")
+                    except Exception:
+                        pass
                 conn.connection.commit()
             elif "postgres" in url_str:
                 from sqlalchemy import text
                 for table, col, col_type in migrations:
                     try:
                         conn.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type};"))
+                    except Exception:
+                        pass
+                for idx_name, table, cols in indexes:
+                    try:
+                        conn.execute(text(f"CREATE INDEX IF NOT EXISTS {idx_name} ON {table} ({cols});"))
                     except Exception:
                         pass
                 conn.commit()

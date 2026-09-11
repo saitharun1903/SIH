@@ -7,6 +7,8 @@ import { useWorkspace } from "@/context/WorkspaceContext";
 import { api } from "@/lib/api";
 
 import { Resource, Building, ResourceType, PaginatedResponse } from "@/lib/types";
+import { useBuildingsQuery, useResourceTypesQuery } from "@/hooks/useNexusQueries";
+import { TableRowSkeleton } from "@/components/common/SectionSkeleton";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -67,20 +69,22 @@ export default function ResourcesPage() {
   const [statusVal, setStatusVal] = useState<"Active" | "Inactive" | "Maintenance">("Active");
   const [location, setLocation] = useState("Wing A");
 
-  const fetchDependencies = async () => {
-    try {
-      const [bldgs, typeRes] = await Promise.all([
-        api.getBuildingsList().catch(() => []),
-        api.get<ResourceType[]>("/resource-types").catch(() => []),
-      ]);
-      setBuildings(Array.isArray(bldgs) ? bldgs : []);
-      setTypes(Array.isArray(typeRes) ? typeRes : []);
-      if (typeRes && typeRes.length > 0) setTypeId(typeRes[0].id);
-      if (bldgs && bldgs.length > 0) setBuildingId(bldgs[0].id);
-    } catch (e) {
-      console.error("Failed to fetch dependencies", e);
+  const { data: bldgsData } = useBuildingsQuery();
+  const { data: typesData } = useResourceTypesQuery();
+
+  useEffect(() => {
+    if (bldgsData) {
+      setBuildings(bldgsData);
+      if (bldgsData.length > 0 && buildingId === undefined) setBuildingId(bldgsData[0].id);
     }
-  };
+  }, [bldgsData, buildingId]);
+
+  useEffect(() => {
+    if (typesData) {
+      setTypes(typesData);
+      if (typesData.length > 0 && !typeId) setTypeId(typesData[0].id);
+    }
+  }, [typesData, typeId]);
 
   const fetchResources = useCallback(async () => {
     setLoading(true);
@@ -104,10 +108,6 @@ export default function ResourcesPage() {
       setLoading(false);
     }
   }, [page, search, selectedBuilding, selectedType, selectedStatus]);
-
-  useEffect(() => {
-    fetchDependencies();
-  }, []);
 
   useEffect(() => {
     fetchResources();
@@ -342,12 +342,7 @@ export default function ResourcesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-slate-500">
-                    <div className="inline-block h-6 w-6 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mb-2" />
-                    <div>Loading resources...</div>
-                  </td>
-                </tr>
+                <TableRowSkeleton rows={6} cols={7} />
               ) : resources.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-slate-500">
