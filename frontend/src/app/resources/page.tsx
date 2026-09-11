@@ -346,7 +346,7 @@ export default function ResourcesPage() {
               ) : resources.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-slate-500">
-                    No campus resources match the selected criteria.
+                    No {terminology.resourcePlural.toLowerCase()} match the selected criteria.
                   </td>
                 </tr>
               ) : (
@@ -466,7 +466,7 @@ export default function ResourcesPage() {
           setIsCreateOpen(false);
           setIsEditOpen(false);
         }}
-        title={isCreateOpen ? "Create Campus Resource" : `Edit Resource (${editingResource?.code})`}
+        title={isCreateOpen ? `Create ${terminology.resourceSingular}` : `Edit ${terminology.resourceSingular} (${editingResource?.code})`}
         maxWidth="lg"
       >
         {formError && (

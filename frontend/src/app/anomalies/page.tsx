@@ -182,7 +182,7 @@ export default function AnomaliesPage() {
       case "persistent_underutilization":
         return "Underutilization";
       case "multivariate_outlier":
-        return "Isolation Forest Outlier";
+        return "Statistical Outlier";
       default:
         return typeStr.replace(/_/g, " ");
     }
@@ -565,7 +565,7 @@ export default function AnomaliesPage() {
             }}
             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
           >
-            <option value="">Building: All Campus Blocks</option>
+            <option value="">All Facilities</option>
             {Array.isArray(buildings) &&
               buildings.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -855,12 +855,12 @@ export default function AnomaliesPage() {
         <Modal
           isOpen={true}
           onClose={() => setTriggerModalOpen(false)}
-          title="Execute Isolation Forest ML Detection"
+          title="Run Anomaly Detection Scan"
           maxWidth="md"
         >
           <div className="space-y-4 text-xs">
             <p className="text-slate-600">
-              Triggers the unsupervised Isolation Forest model over campus telemetry to detect multivariate outliers and physical energy rule violations.
+              Runs statistical outlier detection over facility telemetry to identify consumption spikes, phantom loads, and capacity rule violations.
             </p>
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">

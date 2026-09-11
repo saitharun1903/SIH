@@ -32,6 +32,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { OnboardingWizard } from "@/components/workspace/OnboardingWizard";
 import {
   Layers,
   AlertTriangle,
@@ -47,6 +48,7 @@ import {
   Clock,
   ExternalLink,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -65,6 +67,7 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [elapsedText, setElapsedText] = useState("Just now");
   const [error, setError] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Filters
   const [buildings, setBuildings] = useState<Building[]>([]);
@@ -193,8 +196,8 @@ export default function DashboardPage() {
 
     if (util < 40) {
       return {
-        title: `Low spatial utilization across academic spaces (${util}%)`,
-        description: `Current seat-hour density is operating below optimal institutional thresholds. Consolidating timetable sessions into high-efficiency wings can free idle rooms for maintenance and reduce baseline HVAC draw.`,
+        title: `Low capacity utilization across ${terminology.resourcePlural.toLowerCase()} (${util}%)`,
+        description: `Current usage density is operating below optimal operational thresholds. Consolidating allocations can free idle ${terminology.resourcePlural.toLowerCase()} for maintenance and reduce baseline power draw.`,
         level: "info",
       };
     }
@@ -297,6 +300,18 @@ export default function DashboardPage() {
             <span>{elapsedText}</span>
           </Button>
 
+          {/* Guided Setup Action */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowOnboarding(true)}
+            className="text-xs h-8 border-[#004E72] text-[#004E72] hover:bg-[#EBF3F7]"
+            title="Launch 5-step guided workspace onboarding"
+          >
+            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-[#FF6E42]" />
+            <span>Guided Setup</span>
+          </Button>
+
           {/* Hero Simulation Action */}
           <Link href="/simulator">
             <Button variant="accent" size="sm" className="text-xs h-8 shadow-sm">
@@ -358,12 +373,21 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-2.5">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowOnboarding(true)}
+                  className="bg-[#004E72] text-white"
+                >
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5 text-[#FF6E42]" />
+                  Launch Guided Setup (10s)
+                </Button>
                 <Link href="/workspace">
-                  <Button variant="primary" size="sm">Set up workspace</Button>
+                  <Button variant="outline" size="sm">Manual Workspace Config</Button>
                 </Link>
                 <Link href="/imports">
-                  <Button variant="outline" size="sm">Import data</Button>
+                  <Button variant="outline" size="sm">Import Data</Button>
                 </Link>
               </div>
               <span className="text-xs text-[#64748B]">Zero synthetic claims • Grounded telemetry</span>
@@ -469,10 +493,10 @@ export default function DashboardPage() {
                       <span className="text-2xl sm:text-3xl font-bold text-[#092634] tracking-tight">
                         {summary?.total_spaces_analyzed ?? "0"}
                       </span>
-                      <span className="text-xs text-[#64748B] font-medium">spaces</span>
+                      <span className="text-xs text-[#64748B] font-medium">{terminology.resourcePlural.toLowerCase()}</span>
                     </div>
                     <p className="text-[11px] text-[#64748B] mt-1.5">
-                      {summary?.total_capacity_seats?.toLocaleString() || 0} total institutional seats
+                      {summary?.total_capacity_seats?.toLocaleString() || 0} total {terminology.capacityUnit.toLowerCase()}
                     </p>
                   </div>
                   <div className="h-9 w-9 rounded-lg bg-[#EBF3F7] text-[#004E72] flex items-center justify-center shrink-0">
@@ -661,7 +685,7 @@ export default function DashboardPage() {
             <div className="h-60 flex flex-col items-center justify-center text-center p-6 bg-[#F9F9F9] rounded border border-dashed border-[#CBD5E1]">
               <p className="text-xs font-medium text-[#092634]">Utilization data isn't available yet.</p>
               <p className="text-[11px] text-[#64748B] mt-1 max-w-xs">
-                Import classroom attendance or Wi-Fi probe telemetry to track spatial occupancy.
+                Import operational schedules, shift logs, or sensor telemetry to track spatial occupancy.
               </p>
               <Link href="/imports" className="mt-3">
                 <Button variant="outline" size="sm" className="text-xs">
@@ -674,8 +698,8 @@ export default function DashboardPage() {
 
         {/* Right: Energy Consumption Trend */}
         <Card
-          title="Campus Energy Demand"
-          subtitle="Micro-metered consumption (kWh) across academic facilities"
+          title="Facility Energy Demand"
+          subtitle={`Micro-metered consumption (kWh) across monitored ${terminology.group.toLowerCase()} facilities`}
           action={
             <Link href="/analytics" className="text-xs font-semibold text-[#004E72] hover:underline flex items-center">
               <span>Energy Intelligence</span>
@@ -782,7 +806,7 @@ export default function DashboardPage() {
                         {anom.severity}
                       </Badge>
                       <span className="font-semibold text-xs text-[#092634]">
-                        {anom.resource_name || "Campus Space"}
+                        {anom.resource_name || terminology.resourceSingular}
                       </span>
                       {anom.building_name && (
                         <span className="text-[11px] text-[#64748B]">
@@ -818,7 +842,7 @@ export default function DashboardPage() {
           ) : (
             <div className="py-8 text-center">
               <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto mb-2" />
-              <p className="text-xs font-semibold text-[#092634]">All spaces nominal</p>
+              <p className="text-xs font-semibold text-[#092634]">All {terminology.resourcePlural.toLowerCase()} nominal</p>
               <p className="text-[11px] text-[#64748B] mt-0.5">
                 No active anomalies or boundary violations detected.
               </p>
@@ -870,7 +894,7 @@ export default function DashboardPage() {
                       {rec.estimated_impact?.rooms_freed && (
                         <>
                           <span className="text-slate-300">•</span>
-                          <span className="text-[#004E72]">{rec.estimated_impact.rooms_freed} rooms freed</span>
+                          <span className="text-[#004E72]">{rec.estimated_impact.rooms_freed} {terminology.resourcePlural.toLowerCase()} freed</span>
                         </>
                       )}
                     </div>
@@ -898,6 +922,16 @@ export default function DashboardPage() {
         </div>
         </>
       )}
+
+      {/* Onboarding Wizard Modal */}
+      <OnboardingWizard
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onCompleted={() => {
+          setShowOnboarding(false);
+          loadDashboardData(true);
+        }}
+      />
     </div>
   );
 }

@@ -897,22 +897,22 @@ export default function AnalyticsPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-brand-blue border border-blue-200">
-                      DATA AVAILABILITY &amp; PROVENANCE AUDIT
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-[#004E72] border border-blue-200">
+                      DATA AVAILABILITY &amp; VERIFICATION
                     </span>
                     <Badge variant={multiSourceData?.data_availability.is_sufficient ? "success" : "danger"} size="sm">
                       {multiSourceData?.data_availability.data_sufficiency_status || "CHECKING"}
                     </Badge>
                   </div>
-                  <h3 className="text-base font-bold text-brand-navy">
-                    Multi-Source Relational &amp; External Telemetry Readiness
+                  <h3 className="text-base font-bold text-[#092634]">
+                    Data Source Ingestion Readiness
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    SIH26202 Verification: Mathematical fusion across 6 relational database tables and authentic Kaggle mirror records.
+                    Data integrity audit: Correlating relational database tables and baseline telemetry records.
                   </p>
                 </div>
                 <div className="text-xs font-mono text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-                  Formula: <span className="text-brand-blue font-bold">CSSI = 0.35·Grid + 0.35·Thermal + 0.30·Spatial</span>
+                  Stress Model: <span className="text-[#004E72] font-bold">CSSI = 0.35·Grid + 0.35·Thermal + 0.30·Spatial</span>
                 </div>
               </div>
 
@@ -966,11 +966,11 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-[#FF6E42]"></span>
-                    <span className="text-slate-600">Campus Power (kWh)</span>
+                    <span className="text-slate-600">Facility Power (kWh)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span className="text-slate-600">Scheduled Students</span>
+                    <span className="text-slate-600">Scheduled Occupancy</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-amber-600"></span>
@@ -1034,8 +1034,8 @@ export default function AnalyticsPage() {
                         }}
                         formatter={(val: any, name: any) => {
                           if (name === "grid_mw") return [`${val.toLocaleString()} MW`, "Regional Grid Load"];
-                          if (name === "power_kwh") return [`${val.toLocaleString()} kWh`, "Campus Metered Power"];
-                          if (name === "students") return [`${val} students`, "Scheduled Enrollment Density"];
+                          if (name === "power_kwh") return [`${val.toLocaleString()} kWh`, "Facility Metered Power"];
+                          if (name === "students") return [`${val} units`, "Scheduled Occupancy"];
                           if (name === "temp_c") return [`${val}°C`, "Outdoor Ambient Temperature"];
                           if (name === "cssi_scaled") return [`${(val / 100).toFixed(3)}`, "Composite Stress Index (CSSI)"];
                           return [val, name];
@@ -1061,16 +1061,16 @@ export default function AnalyticsPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="navy">EMPIRICAL BIVARIATE COUPLING</Badge>
+                    <Badge variant="navy">CORRELATION MATRIX</Badge>
                     <span className="text-xs font-mono text-slate-500">
                       N = {multiSourceData?.cross_source_correlation?.sample_size || 0} Aligned Timestamps
                     </span>
                   </div>
                   <h3 className="text-base font-bold text-brand-navy">
-                    Cross-Source Pearson Correlation Matrix (5 × 5)
+                    Cross-Variable Correlation Matrix (5 × 5)
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Empirically calculated Pearson r coefficients across timetable enrollment, campus electrical demand, Wi-Fi occupancy, ambient temperature, and regional grid load.
+                    Calculated correlation coefficients across operational demand, electrical consumption, sensor occupancy, ambient temperature, and regional grid load.
                   </p>
                 </div>
               </div>
@@ -1118,7 +1118,7 @@ export default function AnalyticsPage() {
                   <div className="mt-4 p-3.5 rounded-lg bg-blue-50/50 border border-blue-100 space-y-1.5 text-xs text-slate-700">
                     <div className="font-bold text-brand-navy flex items-center gap-1.5 mb-1">
                       <Info className="h-4 w-4 text-brand-blue" />
-                      <span>Physical Cross-Coupling Findings:</span>
+                      <span>Key Correlation Findings:</span>
                     </div>
                     {multiSourceData.cross_source_correlation.key_insights.map((insight, idx) => (
                       <div key={idx} className="text-slate-600 flex items-start gap-2">
@@ -1243,10 +1243,10 @@ export default function AnalyticsPage() {
                           <div className="mt-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-xs">
                             <div className="text-emerald-800 font-bold flex items-center gap-1.5">
                               <ArrowRightLeft className="h-3.5 w-3.5 text-emerald-600" />
-                              <span>{cand ? "Relocate to Room:" : "Thermal Action:"}</span>
+                              <span>{cand ? "Recommended Reallocation:" : "Load Optimization:"}</span>
                             </div>
                             <div className="font-mono text-brand-navy font-semibold text-xs mt-1">
-                              {cand ? `${cand.name} (${cand.code}) • Floor ${cand.floor} (Cap ${cand.capacity})` : "HVAC Pre-Cooling Coasting"}
+                              {cand ? `${cand.name} (${cand.code}) • Zone ${cand.floor} (Cap ${cand.capacity})` : "HVAC Pre-Cooling / Shift Smoothing"}
                             </div>
                             <div className="text-[11px] text-emerald-700 font-mono mt-1 font-semibold">
                               Saves ~{c.estimated_savings.energy_reduction_kwh} kWh/hr • ₹{c.estimated_savings.tariff_savings_inr}/session
@@ -1283,7 +1283,7 @@ export default function AnalyticsPage() {
                 </div>
               ) : (
                 <div className="p-8 text-center text-slate-500 text-sm">
-                  No high-stress timetable collisions detected above threshold {cssiThreshold.toFixed(2)}. All scheduled sessions operate within acceptable grid and thermal boundaries.
+                  No high-stress operational bottlenecks detected above threshold {cssiThreshold.toFixed(2)}. All allocations operate within acceptable grid and capacity boundaries.
                 </div>
               )}
             </Card>

@@ -65,7 +65,7 @@ export default function SimulatorPage() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [newScenarioName, setNewScenarioName] = useState<string>("");
   const [newScenarioDesc, setNewScenarioDesc] = useState<string>("");
-  const [newScenarioPeriod, setNewScenarioPeriod] = useState<string>("Academic Year 2026-27");
+  const [newScenarioPeriod, setNewScenarioPeriod] = useState<string>("Operational Baseline");
   const [newChanges, setNewChanges] = useState<ScenarioChangeCreate[]>([
     { change_type: "change_enrollment", parameters: { enrollment_multiplier: 1.15 } },
   ]);
@@ -120,7 +120,7 @@ export default function SimulatorPage() {
       const created = await api.createScenario({
         name: template.title,
         description: template.description,
-        base_period: "Academic Year 2026-27",
+        base_period: "Operational Baseline",
         changes: template.default_changes,
       });
 
@@ -329,10 +329,15 @@ export default function SimulatorPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">
                     {tmpl.category}
                   </span>
-                  {tmpl.template_id === "close_aryabhata_tower" && <Building2 className="w-4 h-4 text-amber-600" />}
-                  {tmpl.template_id === "enrollment_surge_15" && <TrendingUp className="w-4 h-4 text-purple-600" />}
-                  {tmpl.template_id === "move_friday_online" && <Zap className="w-4 h-4 text-emerald-600" />}
-                  {tmpl.template_id === "consolidate_visvesvaraya" && <Layers className="w-4 h-4 text-brand-blue" />}
+                  {tmpl.category?.toLowerCase().includes("capacity") ? (
+                    <TrendingUp className="w-4 h-4 text-purple-600" />
+                  ) : tmpl.category?.toLowerCase().includes("energy") || tmpl.category?.toLowerCase().includes("sustainability") ? (
+                    <Zap className="w-4 h-4 text-emerald-600" />
+                  ) : tmpl.category?.toLowerCase().includes("maintenance") || tmpl.category?.toLowerCase().includes("retrofit") ? (
+                    <Building2 className="w-4 h-4 text-amber-600" />
+                  ) : (
+                    <Layers className="w-4 h-4 text-brand-blue" />
+                  )}
                 </div>
                 <h3 className="text-sm font-bold text-brand-navy group-hover:text-brand-blue transition-colors">
                   {tmpl.title}
@@ -494,8 +499,8 @@ export default function SimulatorPage() {
                 </div>
                 <p className="text-xs text-slate-600 mt-1">
                   {activeResult.feasibility === "FEASIBLE"
-                    ? "CP-SAT solver mathematically proved zero timetable conflicts and satisfied all physical room capacity limits."
-                    : "Physical room capacities or timetable overlaps prevent complete allocation without displacement."}
+                    ? "Constraint engine verified zero operational conflicts and satisfied all physical resource capacity limits."
+                    : "Physical resource capacities or operational overlaps prevent complete allocation without displacement."}
                 </p>
               </div>
             </div>
@@ -515,7 +520,7 @@ export default function SimulatorPage() {
               </div>
               <div className="border-l border-slate-200 pl-4">
                 <span className="text-slate-400 block text-[10px] uppercase font-semibold">Solver Engine</span>
-                <span className="font-bold font-mono text-brand-navy">CP-SAT v9.15</span>
+                <span className="font-bold font-mono text-brand-navy">Constraint Solver</span>
               </div>
             </div>
           </div>
@@ -610,7 +615,7 @@ export default function SimulatorPage() {
               <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span className="text-brand-blue font-bold">
                   {activeResult.delta_metrics.displaced_events_count === 0
-                    ? "0 timetable disruption"
+                    ? "0 schedule disruption"
                     : "Intelligently shifted"}
                 </span>
                 <span className="text-slate-400">Perturbation</span>
@@ -706,7 +711,7 @@ export default function SimulatorPage() {
                   Schedule Reallocation Matrix
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Detailed room assignment diff comparing baseline timetable with CP-SAT solution
+                  Detailed assignment comparison between baseline schedule and simulated solution
                 </p>
               </div>
 

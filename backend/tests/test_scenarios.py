@@ -20,9 +20,9 @@ def test_get_templates(client):
     templates = res.json()
     assert len(templates) >= 3
     template_ids = [t["template_id"] for t in templates]
-    assert "close_aryabhata_tower" in template_ids
-    assert "enrollment_surge_15" in template_ids
-    assert "move_friday_online" in template_ids
+    assert any("demand_surge" in tid or "enrollment_surge" in tid for tid in template_ids)
+    assert any("consolidation" in tid or "move_friday" in tid for tid in template_ids)
+    assert any("maintenance" in tid or "close_" in tid for tid in template_ids)
 
 
 def test_create_and_simulate_scenario(client):

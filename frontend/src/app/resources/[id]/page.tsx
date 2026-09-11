@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useWorkspace } from "@/context/WorkspaceContext";
 import { api } from "@/lib/api";
 import {
   Resource,
@@ -50,6 +51,7 @@ import {
 export default function ResourceDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { terminology } = useWorkspace();
   const resourceId = params?.id as string;
 
   const [loading, setLoading] = useState(true);
@@ -152,12 +154,12 @@ export default function ResourceDetailPage() {
           className="inline-flex items-center gap-2 text-xs font-semibold text-brand-blue hover:text-brand-navy"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Campus Resources</span>
+          <span>Back to {terminology.resourcePlural}</span>
         </Link>
         <Card className="p-8 border-rose-200 bg-rose-50 text-center">
           <AlertTriangle className="h-8 w-8 text-rose-600 mx-auto mb-2" />
-          <h2 className="text-base font-bold text-rose-900">Resource Not Found</h2>
-          <p className="text-xs text-rose-700 mt-1">{error || `No space found matching ID ${resourceId}`}</p>
+          <h2 className="text-base font-bold text-rose-900">{terminology.resourceSingular} Not Found</h2>
+          <p className="text-xs text-rose-700 mt-1">{error || `No ${terminology.resourceSingular.toLowerCase()} found matching ID ${resourceId}`}</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/resources")} className="mt-4">
             Return to Inventory
           </Button>
@@ -177,7 +179,7 @@ export default function ResourceDetailPage() {
               className="text-xs font-semibold text-brand-blue hover:underline flex items-center gap-1"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Campus Resources</span>
+              <span>{terminology.resourcePlural}</span>
             </Link>
             <span className="text-slate-300">/</span>
             <span className="text-xs font-mono font-bold text-brand-navy">{resource.code}</span>
@@ -199,13 +201,13 @@ export default function ResourceDetailPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
             <Building2 className="h-3.5 w-3.5 text-slate-400" />
-            <span>{resource.building_name || "Campus Block"}</span>
+            <span>{resource.building_name || terminology.group}</span>
             <span className="text-slate-300">•</span>
             <span>Floor {resource.floor}</span>
             <span className="text-slate-300">•</span>
             <span>{resource.location || "Wing A"}</span>
             <span className="text-slate-300">•</span>
-            <span className="font-mono">{resource.resource_type_name || "Space"}</span>
+            <span className="font-mono">{resource.resource_type_name || terminology.resourceSingular}</span>
           </p>
         </div>
 
@@ -361,7 +363,7 @@ export default function ResourceDetailPage() {
             }`}
           >
             <Calendar className="h-4 w-4 text-brand-blue" />
-            <span>Weekly Timetable ({schedules.length})</span>
+            <span>Weekly Schedule ({schedules.length})</span>
           </button>
 
           <button
@@ -492,9 +494,9 @@ export default function ResourceDetailPage() {
         <Card className="p-0 border-slate-200 bg-white shadow-subtle overflow-hidden">
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-brand-navy">Weekly Timetable Schedule</h3>
+              <h3 className="text-base font-bold text-brand-navy">Weekly Operational Schedule</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                All scheduled courses, lectures, and laboratory sessions allocated to {resource.code}
+                All scheduled sessions and allocations for {resource.code}
               </p>
             </div>
             <Badge variant="blue" size="sm">
@@ -507,10 +509,10 @@ export default function ResourceDetailPage() {
               <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
                 <tr>
                   <th className="px-5 py-3">Day &amp; Time</th>
-                  <th className="px-5 py-3">Subject / Course</th>
-                  <th className="px-5 py-3">Department</th>
-                  <th className="px-5 py-3">Instructor</th>
-                  <th className="px-5 py-3 text-right">Enrollment</th>
+                  <th className="px-5 py-3">Subject / Session</th>
+                  <th className="px-5 py-3">Department / Team</th>
+                  <th className="px-5 py-3">Lead / Operator</th>
+                  <th className="px-5 py-3 text-right">Occupancy</th>
                   <th className="px-5 py-3 text-right">Capacity Match</th>
                 </tr>
               </thead>
@@ -518,7 +520,7 @@ export default function ResourceDetailPage() {
                 {schedules.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-5 py-8 text-center text-slate-500 font-sans">
-                      No timetable sessions currently scheduled in this room.
+                      No sessions currently scheduled for this {terminology.resourceSingular.toLowerCase()}.
                     </td>
                   </tr>
                 ) : (
@@ -680,7 +682,7 @@ export default function ResourceDetailPage() {
                 <span className="font-medium text-brand-navy font-mono">{resource.area} sq ft</span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-slate-500">Campus Wing / Location:</span>
+                <span className="text-slate-500">Zone / Location:</span>
                 <span className="font-medium text-brand-navy">{resource.location}</span>
               </div>
             </div>

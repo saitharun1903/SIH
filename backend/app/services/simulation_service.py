@@ -23,22 +23,9 @@ from app.services.optimization_service import solve_schedule_optimization
 
 SCENARIO_TEMPLATES = [
     {
-        "template_id": "close_aryabhata_tower",
-        "title": "Facility / Wing Retrofit & Maintenance",
-        "description": "Simulate deactivating all secondary rooms or machines in a facility wing for green infrastructure upgrades. Tests capacity to absorb displaced sessions.",
-        "category": "Maintenance & Retrofit",
-        "icon": "Building2",
-        "default_changes": [
-            {
-                "change_type": "deactivate_building",
-                "parameters": {"building_id": 3, "building_name": "Aryabhata Tower"},
-            }
-        ],
-    },
-    {
-        "template_id": "enrollment_surge_15",
-        "title": "+15% Demand / Volume Surge",
-        "description": "Stress-test capacity by simulating a 15% increase in operational workload/demand units across all active groups. Identifies bottlenecked facilities.",
+        "template_id": "demand_surge_15",
+        "title": "+15% Operational Demand Surge",
+        "description": "Stress-test capacity by simulating a 15% increase in operational workload units across all active groups.",
         "category": "Capacity Stress Test",
         "icon": "TrendingUp",
         "default_changes": [
@@ -49,28 +36,15 @@ SCENARIO_TEMPLATES = [
         ],
     },
     {
-        "template_id": "move_friday_online",
-        "title": "Off-Peak / Remote Load Reduction",
-        "description": "Transition off-peak scheduled events (e.g. Friday/Weekend) to remote or standby delivery. Evaluates facility thermal energy and power bill reductions.",
-        "category": "Sustainability & Energy",
-        "icon": "Zap",
-        "default_changes": [
-            {
-                "change_type": "move_day_online",
-                "parameters": {"day_of_week": "Friday"},
-            }
-        ],
-    },
-    {
-        "template_id": "consolidate_visvesvaraya",
-        "title": "Off-Peak Facility Consolidation",
-        "description": "Deactivate auxiliary workshop or secondary spaces to concentrate operations into primary facilities, minimizing HVAC and equipment idling.",
+        "template_id": "off_peak_consolidation",
+        "title": "Off-Peak Load Consolidation",
+        "description": "Consolidate scheduled events during off-peak periods into primary zones to minimize idling and standby energy.",
         "category": "Operational Efficiency",
         "icon": "Layers",
         "default_changes": [
             {
-                "change_type": "deactivate_building",
-                "parameters": {"building_id": 4, "building_name": "Visvesvaraya Complex"},
+                "change_type": "move_day_online",
+                "parameters": {"day_of_week": "Friday"},
             }
         ],
     },
@@ -85,19 +59,17 @@ def get_scenario_templates(db: Optional[Session] = None, org_id: Optional[int] =
 
     buildings = db.query(Building).filter(Building.organization_id == org_id).all()
     if buildings:
-        b1 = buildings[0]
-        dyn_id = f"retrofit_bldg_{b1.id}"
-        if not any(t["template_id"] == dyn_id for t in templates):
+        for bldg in buildings[:2]:
             templates.append({
-                "template_id": dyn_id,
-                "title": f"{b1.name} Infrastructure Retrofit",
-                "description": f"Simulate deactivating operational resources in {b1.name} ({b1.code}) for maintenance. Tests capacity to absorb displaced workload.",
+                "template_id": f"maintenance_facility_{bldg.id}",
+                "title": f"{bldg.name} Maintenance Shutdown",
+                "description": f"Simulate taking resources in {bldg.name} ({bldg.code}) offline for maintenance to test absorption capacity.",
                 "category": "Maintenance & Retrofit",
                 "icon": "Building2",
                 "default_changes": [
                     {
                         "change_type": "deactivate_building",
-                        "parameters": {"building_id": b1.id, "building_name": b1.name},
+                        "parameters": {"building_id": bldg.id, "building_name": bldg.name},
                     }
                 ],
             })

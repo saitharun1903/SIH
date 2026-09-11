@@ -321,7 +321,7 @@ export default function PredictionsPage() {
             <span className="text-xs text-slate-500">critical windows</span>
           </div>
           <div className="mt-2 text-xs text-rose-700 font-medium">
-            {stressPeriods.length > 0 ? "Potential timetable bottleneck" : "Optimal headroom across horizon"}
+            {stressPeriods.length > 0 ? "Potential schedule bottleneck" : "Optimal headroom across horizon"}
           </div>
         </Card>
       </div>

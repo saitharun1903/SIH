@@ -11,6 +11,8 @@ export interface TerminologyConfig {
   group: string;
   unit: string;
   operator: string;
+  resourceSingular: string;
+  capacityUnit: string;
 }
 
 interface WorkspaceContextType {
@@ -25,16 +27,25 @@ interface WorkspaceContextType {
 
 const DEFAULT_TERMINOLOGY: TerminologyConfig = {
   resource: "Resource",
+  resourceSingular: "Resource",
   resourcePlural: "Resources",
   group: "Zone / Group",
   unit: "units",
+  capacityUnit: "units",
   operator: "Staff",
 };
 
-const DOMAIN_TERMINOLOGIES: Record<string, TerminologyConfig> = {
+const DOMAIN_TERMINOLOGIES: Record<string, { resource: string; resourcePlural: string; group: string; unit: string; operator: string; resourceSingular?: string; capacityUnit?: string }> = {
   factory: {
     resource: "Machine",
     resourcePlural: "Machines & Lines",
+    group: "Production Line",
+    unit: "units",
+    operator: "Operator",
+  },
+  manufacturing: {
+    resource: "Machine",
+    resourcePlural: "Machines & Assembly Lines",
     group: "Production Line",
     unit: "units",
     operator: "Operator",
@@ -46,12 +57,26 @@ const DOMAIN_TERMINOLOGIES: Record<string, TerminologyConfig> = {
     unit: "beds",
     operator: "Medical Staff",
   },
+  healthcare: {
+    resource: "Care Unit",
+    resourcePlural: "Beds & Theaters",
+    group: "Clinical Ward",
+    unit: "beds",
+    operator: "Medical Staff",
+  },
   warehouse: {
-    resource: "Storage Unit",
+    resource: "Storage Bay",
     resourcePlural: "Bays & Docks",
     group: "Warehouse Zone",
     unit: "pallets",
     operator: "Worker",
+  },
+  logistics: {
+    resource: "Storage Unit",
+    resourcePlural: "Bays & Fleets",
+    group: "Hub Zone",
+    unit: "pallets",
+    operator: "Logistics Crew",
   },
   office: {
     resource: "Workspace",
@@ -60,12 +85,40 @@ const DOMAIN_TERMINOLOGIES: Record<string, TerminologyConfig> = {
     unit: "desks",
     operator: "Employee",
   },
+  corporate: {
+    resource: "Meeting Room / Desk",
+    resourcePlural: "Rooms & Desks",
+    group: "Floor Wing",
+    unit: "desks",
+    operator: "Employee",
+  },
+  retail: {
+    resource: "Register / Aisle",
+    resourcePlural: "Aisles & Counters",
+    group: "Store Section",
+    unit: "stations",
+    operator: "Store Associate",
+  },
+  hospitality: {
+    resource: "Suite / Hall",
+    resourcePlural: "Suites & Halls",
+    group: "Facility Wing",
+    unit: "rooms",
+    operator: "Staff",
+  },
   education: {
     resource: "Classroom / Lab",
     resourcePlural: "Rooms & Labs",
-    group: "Building / Complex",
+    group: "Building / Wing",
     unit: "seats",
     operator: "Faculty",
+  },
+  custom: {
+    resource: "Resource",
+    resourcePlural: "Resources",
+    group: "Zone / Unit",
+    unit: "units",
+    operator: "Operator",
   },
 };
 
@@ -136,7 +189,16 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const terminology = useMemo<TerminologyConfig>(() => {
     if (!currentWorkspace) return DEFAULT_TERMINOLOGY;
     const typeKey = (currentWorkspace.workspace_type || "").toLowerCase();
-    return DOMAIN_TERMINOLOGIES[typeKey] || DEFAULT_TERMINOLOGY;
+    const raw = DOMAIN_TERMINOLOGIES[typeKey] || DEFAULT_TERMINOLOGY;
+    return {
+      resource: raw.resource,
+      resourcePlural: raw.resourcePlural,
+      group: raw.group,
+      unit: raw.unit,
+      operator: raw.operator,
+      resourceSingular: raw.resourceSingular || raw.resource,
+      capacityUnit: raw.capacityUnit || raw.unit,
+    };
   }, [currentWorkspace]);
 
   const isEducationDomain = useMemo<boolean>(() => {

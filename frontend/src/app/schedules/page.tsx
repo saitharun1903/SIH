@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useWorkspace } from "@/context/WorkspaceContext";
 import { api } from "@/lib/api";
 import { Schedule, Resource, PaginatedResponse } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
@@ -31,6 +32,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export default function SchedulesPage() {
   const { hasRole } = useAuth();
+  const { terminology, currentWorkspace } = useWorkspace();
   const canManage = hasRole(["Administrator", "Analyst"]);
 
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -167,10 +169,10 @@ export default function SchedulesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#092634] flex items-center gap-2.5">
             <CalendarDays className="h-6 w-6 text-[#004E72]" />
-            Academic Timetable & Allocations
+            {currentWorkspace ? `${currentWorkspace.name} Schedules` : "Operational Schedules & Allocations"}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Weekly departmental course sessions, room occupancies, and operational timetable tracking
+            Weekly operational sessions, shifts, and utilization tracking across {terminology.resourcePlural.toLowerCase()}
           </p>
         </div>
 
@@ -182,7 +184,7 @@ export default function SchedulesPage() {
             className="flex items-center gap-1.5 bg-[#004E72] hover:bg-[#003d59] text-white shadow-sm"
           >
             <Plus className="h-4 w-4" />
-            <span>Add Class Schedule</span>
+            <span>Add Schedule Entry</span>
           </Button>
         )}
       </div>
@@ -243,29 +245,29 @@ export default function SchedulesPage() {
       {/* Selected Day KPI Ribbon */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{selectedDay} Classes</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{selectedDay} Sessions</div>
           <div className="text-2xl font-bold text-[#092634] mt-1">{dayStats.classCount}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5 text-[#004E72]" />
-            Active timetable slots
+            Active scheduled slots
           </div>
         </Card>
 
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Expected Footfall</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Expected Load</div>
           <div className="text-2xl font-bold text-[#004E72] mt-1">{dayStats.totalFootfall}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <Users className="h-3.5 w-3.5 text-[#004E72]" />
-            Enrolled student attendance
+            Allocated occupancy units
           </div>
         </Card>
 
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Venues Utilized</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{terminology.resourcePlural} Utilized</div>
           <div className="text-2xl font-bold text-[#092634] mt-1">{dayStats.uniqueRooms}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-            Rooms & laboratories
+            Active {terminology.resourcePlural.toLowerCase()}
           </div>
         </Card>
 
@@ -286,7 +288,7 @@ export default function SchedulesPage() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by course name or academic department..."
+              placeholder="Search by session title, code, or team..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-[#092634] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#004E72] focus:border-transparent transition-all"
@@ -298,7 +300,7 @@ export default function SchedulesPage() {
             onChange={(e) => setSelectedResource(e.target.value)}
             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-[#092634] focus:outline-none focus:ring-2 focus:ring-[#004E72] focus:border-transparent transition-all"
           >
-            <option value="">All Rooms, Auditoriums & Labs</option>
+            <option value="">All {terminology.resourcePlural}</option>
             {Array.isArray(resources) &&
               resources.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -321,9 +323,9 @@ export default function SchedulesPage() {
       ) : schedules.length === 0 ? (
         <Card className="bg-white border-slate-200 shadow-subtle p-12 text-center text-slate-500">
           <CalendarDays className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-[#092634]">No class sessions scheduled</p>
+          <p className="text-sm font-semibold text-[#092634]">No operational sessions scheduled</p>
           <p className="text-xs text-slate-400 mt-1">
-            No academic sessions found for {selectedDay} matching the active filters.
+            No active schedules found for {selectedDay} matching the active filters.
           </p>
         </Card>
       ) : viewMode === "grid" ? (

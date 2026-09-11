@@ -128,21 +128,36 @@ def check_multi_source_data_availability(db: Session) -> Dict[str, Any]:
 
 def get_pjm_diurnal_reference() -> Dict[int, Dict[str, float]]:
     """
-    Loads and computes 24-hour diurnal averages from the authentic PJM dataset.
+    Loads and computes 24-hour diurnal averages from the authentic PJM dataset,
+    falling back safely to standard baseline curves if the dataset cannot be accessed.
     """
-    if not os.path.exists(PJM_RAW_FILE):
-        generate_pjm_macro_dataset()
+    try:
+        if not os.path.exists(PJM_RAW_FILE):
+            generate_pjm_macro_dataset()
 
-    df = pd.read_parquet(PJM_RAW_FILE)
-    diurnal = df.groupby("hour").agg({
-        "grid_load_mw": "mean",
-        "grid_load_index": "mean",
-        "air_temperature_c": "mean",
-        "cooling_degree_days": "mean",
-        "is_grid_peak": "mean",
-    }).to_dict(orient="index")
+        if os.path.exists(PJM_RAW_FILE):
+            df = pd.read_parquet(PJM_RAW_FILE)
+            if not df.empty and "hour" in df.columns:
+                return df.groupby("hour").agg({
+                    "grid_load_mw": "mean",
+                    "grid_load_index": "mean",
+                    "air_temperature_c": "mean",
+                    "cooling_degree_days": "mean",
+                    "is_grid_peak": "mean",
+                }).to_dict(orient="index")
+    except Exception as e:
+        logger.warning(f"Using baseline diurnal curves; PJM load notice: {e}")
 
-    return diurnal
+    return {
+        h: {
+            "grid_load_mw": 20000.0 + 8000.0 * np.sin(np.pi * (h - 6) / 12) if 6 <= h <= 22 else 18000.0,
+            "grid_load_index": 0.35 + 0.45 * (np.sin(np.pi * (h - 6) / 12) ** 2) if 6 <= h <= 22 else 0.25,
+            "air_temperature_c": 22.0 + 8.0 * np.sin(np.pi * (h - 8) / 12) if 8 <= h <= 20 else 21.0,
+            "cooling_degree_days": max(0.0, (22.0 + 8.0 * np.sin(np.pi * (h - 8) / 12) - BASELINE_COMFORT_TEMP_C)) if 8 <= h <= 20 else 2.0,
+            "is_grid_peak": 1.0 if 12 <= h <= 17 else 0.0,
+        }
+        for h in range(24)
+    }
 
 
 def get_multi_source_cross_correlation(db: Session) -> Dict[str, Any]:
@@ -326,7 +341,8 @@ def get_diurnal_multi_layer_profile(db: Session) -> List[Dict[str, Any]]:
         h: round(float(np.mean(vals)), 1) if vals else 0.0 for h, vals in sched_map.items()
     }
 
-    cdd_max = max(p["cooling_degree_days"] for p in pjm_diurnal.values()) or 1.0
+    cdd_vals = [p.get("cooling_degree_days", 0.0) for p in pjm_diurnal.values()]
+    cdd_max = max(cdd_vals) if cdd_vals and max(cdd_vals) > 0 else 1.0
 
     profile = []
     for h in range(24):
@@ -379,7 +395,8 @@ def detect_timetable_stress_collisions(
         return []
 
     pjm_diurnal = get_pjm_diurnal_reference()
-    cdd_max = max(p["cooling_degree_days"] for p in pjm_diurnal.values()) or 1.0
+    cdd_vals = [p.get("cooling_degree_days", 0.0) for p in pjm_diurnal.values()]
+    cdd_max = max(cdd_vals) if cdd_vals and max(cdd_vals) > 0 else 1.0
 
     # Query all schedules with room and building details
     query_sched = (

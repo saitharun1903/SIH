@@ -61,8 +61,8 @@ export const GettingStartedCard: React.FC = () => {
     },
     {
       id: "simulate",
-      title: "Run CP-SAT What-If Simulation",
-      description: "Simulate demand surges, maintenance shutdowns, or shift reallocations with zero impossible assignments.",
+      title: "Run Scenario Simulation",
+      description: "Test demand surges, scheduled downtime, or shift reallocations with constraint-verified feasibility.",
       href: "/simulator",
       completed: false,
       actionText: "Simulate Scenario",

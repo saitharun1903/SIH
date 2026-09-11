@@ -44,18 +44,18 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: "Workspace",
+    title: "Overview",
     items: [
-      { name: "Overview", href: "/dashboard", icon: LayoutDashboard, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Workspaces & Goals", href: "/workspace", icon: Target, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Home", href: "/dashboard", icon: LayoutDashboard, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
   {
-    title: "Resources",
+    title: "Workspace",
     items: [
-      { name: "All Resources", href: "/resources", icon: Layers, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Facilities & Groups", href: "/buildings", icon: Building2, roles: ["Administrator", "Analyst", "Viewer"] },
-      { name: "Schedules", href: "/schedules", icon: CalendarDays, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Workspaces & Goals", href: "/workspace", icon: Target, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Resources", href: "/resources", icon: Layers, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Facilities & Zones", href: "/buildings", icon: Building2, roles: ["Administrator", "Analyst", "Viewer"] },
+      { name: "Schedules & Shifts", href: "/schedules", icon: CalendarDays, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
   {
@@ -79,20 +79,27 @@ const navSections: NavSection[] = [
     items: [
       { name: "What-If Simulator", href: "/simulator", icon: SlidersHorizontal, roles: ["Administrator", "Analyst"] },
       { name: "Scenarios", href: "/scenarios", icon: GitCompare, roles: ["Administrator", "Analyst"] },
+      { name: "Recommendations", href: "/recommendations", icon: Sparkles, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
   {
     title: "Actions",
     items: [
       { name: "Action Center", href: "/actions", icon: Zap, roles: ["Administrator", "Analyst"] },
-      { name: "Activity Log", href: "/audit", icon: History, roles: ["Administrator"] },
+      { name: "Activity Log", href: "/audit", icon: History, roles: ["Administrator", "Analyst"] },
     ],
   },
   {
-    title: "Reports & Help",
+    title: "Reports & Assistant",
     items: [
       { name: "Reports", href: "/reports", icon: FileText, roles: ["Administrator", "Analyst", "Viewer"] },
       { name: "NEXUS Assistant", href: "/assistant", icon: Bot, roles: ["Administrator", "Analyst", "Viewer"] },
+    ],
+  },
+  {
+    title: "Settings",
+    items: [
+      { name: "Settings", href: "/settings", icon: Settings, roles: ["Administrator", "Analyst", "Viewer"] },
     ],
   },
 ];

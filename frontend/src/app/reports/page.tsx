@@ -179,19 +179,19 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        {/* Section 1: Physical Assets & Timetable Enrollment */}
+        {/* Section 1: Physical Assets & Operational Schedules */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
             <Building2 className="w-5 h-5 text-[#004E72]" />
             <h3 className="text-sm font-bold text-[#092634] uppercase tracking-wider">
-              1. Physical Assets & Timetable Enrollment
+              1. Physical Assets &amp; Operational Schedules
             </h3>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-[11px] font-semibold text-slate-500 uppercase block">
-                Academic Buildings
+                Facility Units
               </span>
               <span className="text-2xl font-bold text-[#092634] mt-1 block">
                 {infrastructure.total_buildings}
@@ -364,14 +364,14 @@ export default function ReportsPage() {
           <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50/70 to-slate-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#004E72] block mb-1">
-                Projected Annual Savings with CP-SAT Consolidation
+                Projected Annual Savings with Optimization Engine
               </span>
               <span className="text-3xl font-extrabold text-emerald-600 block">
                 ₹{Math.round(operational_health.potential_annual_savings_inr).toLocaleString()} / year
               </span>
               <p className="text-xs text-slate-600 mt-2 max-w-lg leading-relaxed">
-                By executing recommended hybrid schedules, right-sizing classroom allocations, and
-                deactivating unoccupied spaces during low-demand periods.
+                By executing recommended optimized schedules, right-sizing resource allocations, and
+                deactivating unoccupied assets during low-demand periods.
               </p>
             </div>
 
@@ -403,15 +403,15 @@ export default function ReportsPage() {
               <div className="h-10 border-b border-dashed border-slate-400" />
               <div>
                 <p className="text-xs font-bold text-[#092634]">Director of Facilities & Physical Plant</p>
-                <p className="text-[11px] text-slate-500">Campus Infrastructure Operations</p>
+                <p className="text-[11px] text-slate-500">Facility Infrastructure Operations</p>
               </div>
             </div>
 
             <div className="space-y-10">
               <div className="h-10 border-b border-dashed border-slate-400" />
               <div>
-                <p className="text-xs font-bold text-[#092634]">Dean of Academic Affairs</p>
-                <p className="text-[11px] text-slate-500">Curriculum & Timetable Planning</p>
+                <p className="text-xs font-bold text-[#092634]">Head of Operations</p>
+                <p className="text-[11px] text-slate-500">Resource & Capacity Planning</p>
               </div>
             </div>
 

@@ -377,6 +377,10 @@ class ApiClient {
     return this.get<ResourceType[]>("/resource-types");
   }
 
+  async createResource(data: any): Promise<Resource> {
+    return this.post<Resource>("/resources", data);
+  }
+
 
   async getSchedules(params?: {
     day_of_week?: string;

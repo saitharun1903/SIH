@@ -166,7 +166,7 @@ export default function ScenariosComparePage() {
             Scenario Comparison Matrix
           </h1>
           <p className="text-xs text-slate-600 mt-1">
-            Conduct side-by-side comparative analysis of energy demand, classroom utilization, schedule disruption, and financial ROI.
+            Conduct side-by-side comparative analysis of energy demand, resource utilization, schedule disruption, and financial ROI.
           </p>
         </div>
 
@@ -264,7 +264,7 @@ export default function ScenariosComparePage() {
               <p className="text-xs text-slate-600 mt-1">
                 Achieves maximum weekly energy conservation (
                 {recommendedScenario.results[0].delta_metrics?.weekly_energy_savings_kwh.toLocaleString()} kWh)
-                while maintaining complete timetable constraint feasibility.
+                while maintaining full operational constraint feasibility.
               </p>
             </div>
           </div>
@@ -423,7 +423,7 @@ export default function ScenariosComparePage() {
                 {/* Displaced Class Sessions */}
                 <tr className="hover:bg-slate-50/80">
                   <td className="py-3.5 px-5 font-semibold text-slate-500 bg-slate-50/50">
-                    Timetable Perturbation
+                    Schedule Realignment
                   </td>
                   {comparedScenarios.map((s) => {
                     const res = s.results?.[0];
@@ -435,17 +435,17 @@ export default function ScenariosComparePage() {
                           {displaced} sessions moved
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5">
-                          {Math.round((displaced / Math.max(total, 1)) * 100)}% of timetable shifted
+                          {Math.round((displaced / Math.max(total, 1)) * 100)}% of schedule shifted
                         </div>
                       </td>
                     );
                   })}
                 </tr>
 
-                {/* CP-SAT Solver Objective */}
+                {/* Optimization Objective Value */}
                 <tr className="hover:bg-slate-50/80">
                   <td className="py-3.5 px-5 font-semibold text-slate-500 bg-slate-50/50">
-                    CP-SAT Objective Value
+                    Optimization Objective Score
                   </td>
                   {comparedScenarios.map((s) => {
                     const res = s.results?.[0];

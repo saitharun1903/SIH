@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useWorkspace } from "@/context/WorkspaceContext";
 import { api } from "@/lib/api";
 import { Building, PaginatedResponse } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
@@ -25,6 +26,7 @@ import {
 
 export default function BuildingsPage() {
   const { user, hasRole } = useAuth();
+  const { terminology, currentWorkspace } = useWorkspace();
   const isAdmin = hasRole(["Administrator"]);
 
   const [buildings, setBuildings] = useState<Building[]>([]);
@@ -147,10 +149,10 @@ export default function BuildingsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#092634] flex items-center gap-2.5">
             <Building2 className="h-6 w-6 text-[#004E72]" />
-            Campus Physical Infrastructure
+            {currentWorkspace ? `${currentWorkspace.name} Facilities` : `${terminology.group}s & Zones`}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Institutional buildings, departmental blocks, floor distributions, and spatial capacity hierarchy
+            Physical infrastructure, zones, and capacity governance
           </p>
         </div>
 
@@ -162,7 +164,7 @@ export default function BuildingsPage() {
             className="flex items-center gap-1.5 bg-[#004E72] hover:bg-[#003d59] text-white shadow-sm"
           >
             <Plus className="h-4 w-4" />
-            <span>Add Building Block</span>
+            <span>Add {terminology.group}</span>
           </Button>
         )}
       </div>
@@ -170,16 +172,16 @@ export default function BuildingsPage() {
       {/* Institutional KPI Summary Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Campus Blocks</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{terminology.group}s</div>
           <div className="text-2xl font-bold text-[#092634] mt-1">{stats.totalBlocks}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <Building2 className="h-3.5 w-3.5 text-[#004E72]" />
-            Registered physical complexes
+            Registered {terminology.group.toLowerCase()}s
           </div>
         </Card>
 
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Managed Floors</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Managed Levels</div>
           <div className="text-2xl font-bold text-[#004E72] mt-1">{stats.totalFloors}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <Layers className="h-3.5 w-3.5 text-[#004E72]" />
@@ -188,20 +190,20 @@ export default function BuildingsPage() {
         </Card>
 
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Associated Spaces</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Associated {terminology.resourcePlural}</div>
           <div className="text-2xl font-bold text-[#092634] mt-1">{stats.totalSpaces}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-            Rooms, labs & auditoriums
+            Active {terminology.resourcePlural.toLowerCase()}
           </div>
         </Card>
 
         <Card className="bg-white border-slate-200 shadow-subtle p-5">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Campus Zones</div>
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Facility Zones</div>
           <div className="text-2xl font-bold text-[#FF6E42] mt-1">{stats.uniqueLocations}</div>
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5 text-[#FF6E42]" />
-            Geographical quadrants
+            Geographical zones
           </div>
         </Card>
       </div>

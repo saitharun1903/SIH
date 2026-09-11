@@ -193,6 +193,14 @@ def init_initial_data() -> None:
                 logger.info(f"Registered data source: {s['name']} [{s['provider']}]")
 
         db.commit()
+
+        # Ensure multi-domain demo workspaces (Factory, Hospital, Warehouse, Campus) are provisioned
+        try:
+            from app.services.workspace_service import ensure_default_workspace
+            ensure_default_workspace(db, org.id)
+            logger.info("Multi-domain operational workspaces verified and ready.")
+        except Exception as ws_err:
+            logger.warning(f"Notice provisioning multi-domain workspaces: {ws_err}")
     except Exception as e:
         logger.error(f"Error during baseline initialization: {e}", exc_info=True)
         db.rollback()

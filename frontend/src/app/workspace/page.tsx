@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Workspace, Goal, ResourceType, Resource } from "@/lib/types";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { OnboardingWizard } from "@/components/workspace/OnboardingWizard";
 import {
   Layers,
   Target,
@@ -158,7 +158,7 @@ export default function WorkspacePage() {
             className="px-4 py-2 rounded-lg bg-[#004E72] hover:bg-[#003B57] text-white text-xs font-semibold flex items-center space-x-1.5 transition-colors shadow-sm"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#FF6E42]" />
-            <span>New Domain Workspace</span>
+            <span>Launch Guided Setup (10s)</span>
           </button>
         </div>
       </div>

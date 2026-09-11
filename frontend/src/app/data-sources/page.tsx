@@ -96,18 +96,18 @@ export default function DataSourcesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-blue">
-              Data Infrastructure &amp; Governance
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#004E72]">
+              Data
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-xs text-slate-500 font-medium">Relational &amp; Telemetry Registries</span>
+            <span className="text-xs text-slate-500 font-medium">Data Sources</span>
           </div>
-          <h1 className="text-2xl font-bold text-brand-navy tracking-tight flex items-center gap-2.5">
-            <Database className="h-6 w-6 text-brand-blue" />
-            Data Sources &amp; Telemetry Registries
+          <h1 className="text-2xl font-bold text-[#092634] tracking-tight flex items-center gap-2.5">
+            <Database className="h-6 w-6 text-[#004E72]" />
+            Data Sources
           </h1>
-          <p className="text-xs text-slate-600 mt-1">
-            Certified data pipeline connectors bridging institutional timetables, IoT energy meters, and authentic macro benchmarks.
+          <p className="text-xs text-[#475569] mt-1">
+            Connect and manage databases, uploaded operational records, and telemetry feeds.
           </p>
         </div>
 
@@ -117,9 +117,9 @@ export default function DataSourcesPage() {
             size="sm"
             onClick={loadDataSources}
             disabled={isLoading}
-            className="flex items-center gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-1.5 border-slate-200 text-[#092634] hover:bg-slate-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin text-brand-blue" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin text-[#004E72]" : ""}`} />
             <span>Refresh Sources</span>
           </Button>
         </div>
@@ -127,13 +127,11 @@ export default function DataSourcesPage() {
 
       {/* Real Data Provenance Callout */}
       <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-xs text-slate-700 flex items-start gap-3 shadow-subtle">
-        <Info className="h-5 w-5 text-brand-blue shrink-0 mt-0.5" />
+        <Info className="h-5 w-5 text-[#004E72] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="font-bold text-brand-navy">Data Architecture &amp; Attribution Guarantee:</span>
-          <p className="text-slate-600 leading-relaxed">
-            NEXUS combines real-world Kaggle datasets (ASHRAE building energy, LEAD labeled anomaly benchmark) for macro
-            energy and building intelligence, with institutional uploads for micro classroom schedules, timetable
-            allocations, and Wi-Fi occupancy telemetry. Data is never fabricated or hardcoded.
+          <span className="font-bold text-[#092634]">Data Sources &amp; Coverage:</span>
+          <p className="text-[#475569] leading-relaxed">
+            NEXUS connects operational resource schedules, power telemetry meters, and benchmark datasets. Every metric shown across the platform is calculated from verified database records.
           </p>
         </div>
       </div>

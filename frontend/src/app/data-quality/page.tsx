@@ -191,7 +191,7 @@ export default function DataQualityPage() {
             <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200">
               <span className="flex items-center gap-2 text-slate-700 font-medium">
                 <Layers className="h-4 w-4 text-[#004E72]" />
-                Total Campus Spaces
+                Total Monitored Resources
               </span>
               <span className="font-bold text-[#092634] font-mono text-sm">{data?.total_resources || 0}</span>
             </div>
@@ -199,7 +199,7 @@ export default function DataQualityPage() {
             <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200">
               <span className="flex items-center gap-2 text-slate-700 font-medium">
                 <Calendar className="h-4 w-4 text-[#004E72]" />
-                Active Class Schedules
+                Active Operational Schedules
               </span>
               <span className="font-bold text-[#092634] font-mono text-sm">{data?.total_schedules || 0}</span>
             </div>
